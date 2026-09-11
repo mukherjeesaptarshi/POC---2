@@ -1,17 +1,17 @@
 @api @authentication @A4
 Feature: Authentication - Unauthenticated and Cross User Access
 
-  @A4
+  @A4_negative
   Scenario: Protected endpoint without token should return 401
-    When I access customer "CUST-001" without an access token
-    Then the API response status should be 401
-    And the API error code should be "TOKEN_MISSING"
+    Given I access customer "CUST-001" with "no access" token
+    When the API response status should be 401
+    Then the API error code should be "TOKEN_MISSING"
 
-  @A4
+  @A4_negative
   Scenario: Protected endpoint with malformed token should return 401
-    When I access customer "CUST-001" with malformed token
-    Then the API response status should be 401
-    And the API error code should be "TOKEN_INVALID"
+    Given I access customer "CUST-001" with "malformed" token
+    When the API response status should be 401
+    Then the API error code should be "TOKEN_INVALID"
 
   @A4
   Scenario: Customer should access their own customer data

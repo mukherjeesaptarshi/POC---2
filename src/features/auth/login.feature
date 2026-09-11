@@ -7,7 +7,7 @@ Feature: Authentication - Login and Token Issue
   @A1
   Scenario: Login with valid credentials should return a valid access token
     When I login with username "alice" and password "Password123!"
-    Then the login response status should be 200
+    Then the API response status should be 200
     And the login response should contain an access token
     And the login response should contain a refresh token
     And the token type should be "Bearer"
@@ -20,7 +20,7 @@ Feature: Authentication - Login and Token Issue
   @A1
   Scenario: Login with invalid password should return 401
     When I login with username "alice" and password "WrongPassword123!"
-    Then the login response status should be 401
+    Then the API response status should be 401
     And the login error code should be "AUTH_INVALID_CREDENTIALS"
     And the login error message should be "Invalid username or password"
     And the login response should not contain an access token
@@ -29,7 +29,7 @@ Feature: Authentication - Login and Token Issue
   @A1
   Scenario: Login with non-existing username should return 401
     When I login with username "unknownuser" and password "Password123!"
-    Then the login response status should be 401
+    Then the API response status should be 401
     And the login error code should be "AUTH_INVALID_CREDENTIALS"
     And the login error message should be "Invalid username or password"
     And the login response should not contain an access token

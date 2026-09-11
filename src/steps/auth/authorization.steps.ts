@@ -1,12 +1,51 @@
 import { When } from "@cucumber/cucumber";
 import { CustomWorld } from "../../support/world";
 
+// When(
+//   "I access customer {string} without an access token",
+//   async function (this: CustomWorld, customerId: string) {
+//     this.response = await this.authService.getCustomer(customerId, "");
+//     this.errorBody = await this.response.json();
+//   },
+// );
+
+// When(
+//   "I access customer {string} with malformed token",
+//   async function (this: CustomWorld, customerId: string) {
+//     this.response = await this.authService.getCustomer(
+//       customerId,
+//       "abc.invalid.token",
+//     );
+
+//     this.errorBody = await this.response.json();
+//   },
+// );
+
 When(
-  "I access customer {string} without an access token",
-  async function (this: CustomWorld, customerId: string) {
-    this.response = await this.authService.getCustomer(customerId, "");
+  "I access customer {string} with {string} token",
+  async function (
+    this: CustomWorld,
+    customerId: string,
+    tokenType: string
+  ) {
+    const tokenMap: Record<string, string> = {
+      "no access": "",
+      "malformed": "abc.invalid.token",
+    };
+
+    const accessToken = tokenMap[tokenType];
+
+    if (accessToken === undefined) {
+      throw new Error(
+        `Unsupported token type: ${tokenType}`
+      );
+    }
+    this.response = await this.authService.getCustomer(
+      customerId,
+      accessToken
+    );
     this.errorBody = await this.response.json();
-  },
+  }
 );
 
 When(
@@ -18,18 +57,6 @@ When(
     this.response = await this.requestContext.get(endpoint, {
       headers: { Authorization: token ? `Bearer ${token}` : "" },
     });
-    this.errorBody = await this.response.json();
-  },
-);
-
-When(
-  "I access customer {string} with malformed token",
-  async function (this: CustomWorld, customerId: string) {
-    this.response = await this.authService.getCustomer(
-      customerId,
-      "abc.invalid.token",
-    );
-
     this.errorBody = await this.response.json();
   },
 );
