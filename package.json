@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "tsx scripts/runApiTests.ts",
-    "test:api": "cucumber-js --profile api",
+    "test:api": "cucumber-js",
     "test:api:shard": "node scripts/runApiShard.js",
     "test:api:lifecycle": "cross-env ACCESS_TOKEN_SECONDS=2 cucumber-js --profile api --tags @A3",
     "start:locale:server": "node src/mock-server/server.js"

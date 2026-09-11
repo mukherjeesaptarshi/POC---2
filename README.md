@@ -16,17 +16,8 @@ The API suite uses Cucumber, TypeScript, Playwright `APIRequestContext`, and the
 
 ## Run locally
 
-Start the mock server in one terminal:
-
 ```powershell
-npm run start:locale:server
-```
-
-Run the API suite in another terminal:
-
-```powershell
-$env:API_BASE_URL = "http://localhost:4010"
-npm run test:api
+npm run test
 ```
 
 Useful focused tags:
@@ -37,9 +28,6 @@ npm run test:api -- --tags @rbac
 npm run test:api -- --tags @scheduled-payments
 npm run test:api -- --tags @statements
 npm run test:api -- --tags @quality
-npm run test:api:smoke
-npm run test:api:contract
-npm run test:api:shard
 ```
 
 For a four-way local split:
