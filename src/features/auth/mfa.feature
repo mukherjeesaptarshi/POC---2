@@ -7,7 +7,7 @@ Feature: MFA Challenge
   @A2
   Scenario: MFA challenge should be created successfully
     When I request an MFA challenge
-    Then the MFA response status should be 201
+    Then the API response status should be 201
     And the MFA challenge token should be returned
     And the MFA challenge id should be returned
     And the MFA challenge should have an expiry
@@ -17,7 +17,7 @@ Feature: MFA Challenge
   Scenario: Wrong MFA code should decrement the failure counter
     When I request an MFA challenge
     And I verify the MFA challenge with code "000000"
-    Then the MFA response status should be 401
+    Then the API response status should be 401
     And the MFA error code should be "MFA_INVALID_CODE"
     And the MFA attempts remaining should be 2
 
@@ -25,7 +25,7 @@ Feature: MFA Challenge
   Scenario: MFA challenge should be single-use
     When I request an MFA challenge
     And I verify the MFA challenge with code "123456"
-    Then the MFA response status should be 200
+    Then the API response status should be 200
     When I verify the same MFA challenge again with code "123456"
-    Then the MFA response status should be 401
+    Then the API response status should be 401
     And the MFA error code should be "MFA_CHALLENGE_ALREADY_USED"

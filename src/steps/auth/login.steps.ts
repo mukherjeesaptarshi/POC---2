@@ -4,28 +4,45 @@ import { CustomWorld } from "../../support/world";
 import { assertNoSensitiveFields } from "../../support/schema";
 import { isFutureDate, parseIsoDate } from "../../../utils/dateUtils";
 
-Then(
-  "the login response status should be {int}",
-  function (this: CustomWorld, expectedStatus: number) {
-    expect(this.response.status()).toBe(expectedStatus);
-  },
-);
+// Then(
+//   "the login response status should be {int}",
+//   function (this: CustomWorld, expectedStatus: number) {
+//     expect(this.response.status()).toBe(expectedStatus);
+//   },
+// );
+
+// Then(
+//   "the login response should contain an access token",
+//   function (this: CustomWorld) {
+//     expect(this.responseBody.accessToken).toBeDefined();
+
+//     expect(this.responseBody.accessToken).not.toBe("");
+//   },
+// );
+
+// Then(
+//   "the login response should contain a refresh token",
+//   function (this: CustomWorld) {
+//     expect(this.responseBody.refreshToken).toBeDefined();
+
+//     expect(this.responseBody.refreshToken).not.toBe("");
+//   },
+// );
 
 Then(
-  "the login response should contain an access token",
-  function (this: CustomWorld) {
-    expect(this.responseBody.accessToken).toBeDefined();
-
-    expect(this.responseBody.accessToken).not.toBe("");
-  },
-);
-
-Then(
-  "the login response should contain a refresh token",
-  function (this: CustomWorld) {
-    expect(this.responseBody.refreshToken).toBeDefined();
-
-    expect(this.responseBody.refreshToken).not.toBe("");
+  "the login response should contain a {string} token",
+  function (this: CustomWorld, tokenType: string) {
+    if (tokenType === "access") {
+      expect(this.responseBody.accessToken).toBeDefined();
+      expect(this.responseBody.accessToken).not.toBe("");
+    } else if (tokenType === "refresh") {
+      expect(this.responseBody.refreshToken).toBeDefined();
+      expect(this.responseBody.refreshToken).not.toBe("");
+    } else {
+      throw new Error(
+        `Unsupported token type: ${tokenType}`
+      );
+    }
   },
 );
 
@@ -71,23 +88,68 @@ Then(
   },
 );
 
+// Then(
+//   "the login response should contain a valid expiry date",
+//   function (this: CustomWorld) {
+//     const expiresAt = this.responseBody.expiresAt;
+
+//     expect(expiresAt).toBeDefined();
+
+//     const parsedDate = parseIsoDate(expiresAt);
+
+//     expect(parsedDate.getTime()).toBeGreaterThan(Date.now());
+//     expect(isFutureDate(expiresAt)).toBeTruthy();
+//   },
+// );
+
+// Then(
+//   "the login response should not contain the password",
+//   function (this: CustomWorld) {
+//     assertNoSensitiveFields(this.responseBody, [
+//       "password",
+//       "ssn",
+//       "socialSecurityNumber",
+//       "dateOfBirth",
+//       "cardNumber",
+//       "accountNumber",
+//     ]);
+//     const bodyText = JSON.stringify(this.responseBody).toLowerCase();
+
+//     expect(bodyText).not.toContain("password");
+
+//     expect(bodyText).not.toContain("password123");
+//   },
+// );
+
+// Then(
+//   "the login response should not contain sensitive personal information",
+//   function (this: CustomWorld) {
+//     const body = this.responseBody as any;
+
+//     expect(body).not.toHaveProperty("ssn");
+
+//     expect(body).not.toHaveProperty("socialSecurityNumber");
+
+//     expect(body).not.toHaveProperty("dateOfBirth");
+
+//     expect(body).not.toHaveProperty("phoneNumber");
+
+//     expect(body).not.toHaveProperty("address");
+//   },
+// );
+
 Then(
-  "the login response should contain a valid expiry date",
-  function (this: CustomWorld) {
+  "the login response should not contain {string}",
+  function (this: CustomWorld, option: string) {
+    if (option === "invalid expiry date") {
     const expiresAt = this.responseBody.expiresAt;
-
-    expect(expiresAt).toBeDefined();
-
+	expect(expiresAt).toBeDefined();
     const parsedDate = parseIsoDate(expiresAt);
-
     expect(parsedDate.getTime()).toBeGreaterThan(Date.now());
     expect(isFutureDate(expiresAt)).toBeTruthy();
-  },
-);
-
-Then(
-  "the login response should not contain the password",
-  function (this: CustomWorld) {
+    }
+	
+	else if (option === "password") {
     assertNoSensitiveFields(this.responseBody, [
       "password",
       "ssn",
@@ -97,27 +159,24 @@ Then(
       "accountNumber",
     ]);
     const bodyText = JSON.stringify(this.responseBody).toLowerCase();
-
     expect(bodyText).not.toContain("password");
-
     expect(bodyText).not.toContain("password123");
-  },
-);
-
-Then(
-  "the login response should not contain sensitive personal information",
-  function (this: CustomWorld) {
+    }
+	
+	else if (option === "sensitive information") {    
     const body = this.responseBody as any;
-
     expect(body).not.toHaveProperty("ssn");
-
     expect(body).not.toHaveProperty("socialSecurityNumber");
-
     expect(body).not.toHaveProperty("dateOfBirth");
-
     expect(body).not.toHaveProperty("phoneNumber");
-
     expect(body).not.toHaveProperty("address");
+    }
+	
+	   else {
+      throw new Error(
+        `Invalid option: ${option}`
+      );
+    }
   },
 );
 
@@ -135,16 +194,31 @@ Then(
   },
 );
 
-Then(
-  "the login response should not contain an access token",
-  function (this: CustomWorld) {
-    expect(this.responseBody.accessToken).toBeUndefined();
-  },
-);
+// Then(
+//   "the login response should not contain an access token",
+//   function (this: CustomWorld) {
+//     expect(this.responseBody.accessToken).toBeUndefined();
+//   },
+// );
+
+// Then(
+//   "the login response should not contain a refresh token",
+//   function (this: CustomWorld) {
+//     expect(this.responseBody.refreshToken).toBeUndefined();
+//   },
+// );
 
 Then(
-  "the login response should not contain a refresh token",
-  function (this: CustomWorld) {
-    expect(this.responseBody.refreshToken).toBeUndefined();
+  "the login response should not contain a {string} token",
+  function (this: CustomWorld, tokenType: string) {
+    if (tokenType === "access") {
+      expect(this.responseBody.accessToken).toBeUndefined();
+    } else if (tokenType === "refresh") {
+      expect(this.responseBody.refreshToken).toBeUndefined();
+    } else {
+      throw new Error(
+        `Unsupported token type: ${tokenType}`
+      );
+    }
   },
 );
