@@ -4,12 +4,12 @@ Feature: MFA Challenge
   Background:
     Given I login with username "alice" and password "Password123!"
 
-  @A2
+  @A2_trial
   Scenario: MFA challenge should be created successfully
     When I request an MFA challenge
     Then the API response status should be 201
-    And the MFA challenge token should be returned
-    And the MFA challenge id should be returned
+    And the MFA challenge "token" should be returned
+    And the MFA challenge "id" should be returned
     And the MFA challenge should have an expiry
     And the MFA attempts remaining should be 3
 

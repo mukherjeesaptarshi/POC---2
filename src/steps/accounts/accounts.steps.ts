@@ -36,12 +36,14 @@ Given(
     this.customerId = body.user.customerId;
   },
 );
+
 When(
   "I request the accounts for the configured customer",
   async function (this: CustomWorld) {
     await loadAccounts(this);
   },
 );
+
 When(
   "I request one account by ID from the accounts list",
   async function (this: CustomWorld) {
@@ -60,6 +62,7 @@ When(
     );
   },
 );
+
 When(
   "I request one account by ID from the configured customer",
   async function (this: CustomWorld) {
@@ -67,18 +70,21 @@ When(
     this.selectedAccount = this.accounts[0];
   },
 );
+
 Then(
   "the accounts list response matches the account list schema",
   function (this: CustomWorld) {
     expect(this.accounts.length).toBeGreaterThan(0);
   },
 );
+
 Then(
   "the account detail response matches the account schema",
   function (this: CustomWorld) {
     expect(accountSchema.safeParse(this.selectedAccount).success).toBeTruthy();
   },
 );
+
 Then(
   "every returned account has numeric balances, ISO currency, and masked account number",
   function (this: CustomWorld) {
@@ -89,6 +95,7 @@ Then(
     }
   },
 );
+
 When(
   "I request the transaction history for that account",
   async function (this: CustomWorld) {
@@ -108,12 +115,14 @@ When(
     ).items;
   },
 );
+
 Then(
   "the transaction history response matches the transaction list schema",
   function (this: CustomWorld) {
     expect(this.transactions.length).toBeGreaterThan(0);
   },
 );
+
 Then(
   "the transaction history reconciles with the current account balance",
   function (this: CustomWorld) {
@@ -125,6 +134,7 @@ Then(
     expect(total).toBe(this.selectedAccount.balance);
   },
 );
+
 Then(
   "the account available, current, and pending balances are internally consistent",
   function (this: CustomWorld) {
@@ -134,6 +144,7 @@ Then(
     ).toBe(this.selectedAccount.currentBalance);
   },
 );
+
 When(
   "I request transactions for an account with transaction history",
   async function (this: CustomWorld) {
@@ -150,6 +161,7 @@ When(
     ).items;
   },
 );
+
 When(
   "I request transactions using supported banking filters",
   async function (this: CustomWorld) {
@@ -169,6 +181,7 @@ When(
     this.filteredAmount = amount;
   },
 );
+
 Then(
   "every filtered transaction satisfies the requested filter",
   function (this: CustomWorld) {
@@ -176,6 +189,7 @@ Then(
       expect(item.amount).toBeGreaterThanOrEqual(this.filteredAmount);
   },
 );
+
 Then(
   "paginated transaction pages have no duplicates",
   function (this: CustomWorld) {
@@ -183,6 +197,7 @@ Then(
     expect(new Set(ids).size).toBe(ids.length);
   },
 );
+
 Then(
   "the total transaction count remains consistent across pages",
   function (this: CustomWorld) {

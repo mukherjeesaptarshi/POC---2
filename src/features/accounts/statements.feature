@@ -5,5 +5,5 @@ Feature: Account statements
 
   Scenario: Account statement reconciles to the closing balance
     When I request the statement for the selected account
-    Then the statement has a valid schema
-    And the statement transactions reconcile with the closing balance
+    And the statement has a valid schema
+    Then the statement transactions reconcile with the closing balance

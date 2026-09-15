@@ -18,46 +18,48 @@ When("I request an MFA challenge", async function (this: CustomWorld) {
 });
 
 // Then(
-//   "the MFA response status should be {int}",
-//   function (this: CustomWorld, expectedStatus: number) {
-//     expect(this.response.status()).toBe(expectedStatus);
+//   "the MFA response should contain a challenge {string}",
+//   function (this: CustomWorld, challengeTokenID: string) {
+//     if (challengeTokenID === "token") {
+//     expect(this.mfaBody.challengeToken).toBeDefined();
+//     expect(this.mfaBody.challengeToken).not.toBe("");
+//     }
+	
+// 	else if (challengeTokenID === "id") {
+//     expect(this.mfaBody.challengeId).toBeDefined();
+//     expect(this.mfaBody.challengeId).not.toBe("");
+//     }
+	
+// 	   else {
+//       throw new Error(
+//         `Invalid challenge: ${challengeTokenID}`
+//       );
+//     }
 //   },
 // );
 
 Then(
-  "the MFA response should contain a challenge id",
-  function (this: CustomWorld) {
-    expect(this.mfaBody.challengeId).toBeDefined();
-
-    expect(this.mfaBody.challengeId).not.toBe("");
-  },
-);
-
-Then(
-  "the MFA response should contain a challenge token",
-  function (this: CustomWorld) {
-    expect(this.mfaBody.challengeToken).toBeDefined();
-
-    expect(this.mfaBody.challengeToken).not.toBe("");
-  },
-);
-
-Then(
-  "the MFA challenge token should be returned",
-  function (this: CustomWorld) {
+  "the MFA challenge {string} should be returned",
+  function (this: CustomWorld, challenge: string) {
+    if (challenge === "token") {
     expect(this.mfaBody).toBeDefined();
     expect(this.mfaBody.challengeToken).toBeDefined();
     expect(this.mfaBody.challengeToken).not.toBe("");
+    }
+	
+	else if (challenge === "id") {
+    expect(this.mfaBody).toBeDefined();
+	expect(this.mfaBody.challengeId).toBeDefined();
+	expect(this.mfaBody.challengeId).not.toBe("");
+    }
+	
+	   else {
+      throw new Error(
+        `Invalid challenge: ${challenge}`
+      );
+    }
   },
 );
-
-Then("the MFA challenge id should be returned", function (this: CustomWorld) {
-  expect(this.mfaBody).toBeDefined();
-
-  expect(this.mfaBody.challengeId).toBeDefined();
-
-  expect(this.mfaBody.challengeId).not.toBe("");
-});
 
 Then("the MFA challenge should have an expiry", function (this: CustomWorld) {
   expect(this.mfaBody.expiresIn).toBeGreaterThan(0);
@@ -67,13 +69,6 @@ Then("the MFA challenge should have an expiry", function (this: CustomWorld) {
   expect(parsedDate.getTime()).toBeGreaterThan(Date.now());
   expect(isFutureDate(this.mfaBody.expiresAt)).toBeTruthy();
 });
-
-// Then(
-//   "the MFA challenge should have 3 attempts remaining",
-//   function (this: CustomWorld) {
-//     expect(this.mfaBody.attemptsRemaining).toBe(3);
-//   },
-// );
 
 When(
   "I verify the MFA challenge with code {string}",
