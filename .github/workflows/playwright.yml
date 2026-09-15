@@ -104,10 +104,8 @@ jobs:
     name: Deploy
     needs:
       - api
-      - api-lifecycle
       - secret-scan
       - test
-      - mobile
 
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
