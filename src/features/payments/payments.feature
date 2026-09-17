@@ -8,9 +8,9 @@ Feature: Banking payment API
   Scenario: Payment and idempotency prevent duplicate debit
     When I create a payment of 10.25 with idempotency key "same-key"
     And I repeat the payment with idempotency key "same-key"
-    Then the repeated payment has the original payment ID
+    And the repeated payment has the original payment ID
     And the source and destination balances moved exactly once by 10.25
-    And the payment status is "COMPLETED"
+    Then the payment status is "COMPLETED"
 
   @A9
   Scenario: A new idempotency key creates a second payment
@@ -21,8 +21,8 @@ Feature: Banking payment API
   @A10
   Scenario Outline: Invalid payment is rejected with an error contract
     When I submit a payment with amount <amount> and currency "<currency>"
-    Then the payment response status is 422
-    And the payment error has code "PAYMENT_VALIDATION_FAILED"
+    And the payment response status is 422
+    Then the payment error has code "PAYMENT_VALIDATION_FAILED"
 
     Examples:
       | amount | currency |
@@ -34,8 +34,8 @@ Feature: Banking payment API
   @A10
   Scenario Outline: Invalid payment fields are rejected
     When I submit a payment with invalid field "<field>"
-    Then the payment response status is 422
-    And the payment error has code "PAYMENT_VALIDATION_FAILED"
+    And the payment response status is 422
+    Then the payment error has code "PAYMENT_VALIDATION_FAILED"
 
     Examples:
       | field       |
@@ -47,8 +47,8 @@ Feature: Banking payment API
   Scenario: Payment status and audit record are available
     When I create a payment of 2.50 with idempotency key "payments-feature-key"
     And I request its status and audit record
-    Then the payment status is "COMPLETED"
-    And the audit entry references the payment
+    And the payment status is "COMPLETED"
+    Then the audit entry references the payment
 
   @A11
   Scenario: Payment terminal status is immutable
