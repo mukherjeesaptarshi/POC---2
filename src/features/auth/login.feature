@@ -23,17 +23,17 @@ Feature: Authentication - Login and Token Issue
   @A1
   Scenario: Login with invalid password should return 401
     When I login with username "alice" and password "WrongPassword123!"
-    Then the API response status should be 401
+    And the API response status should be 401
     And the login error code should be "AUTH_INVALID_CREDENTIALS"
     And the login error message should be "Invalid username or password"
     And the login response should not contain a "access" token
-    And the login response should not contain a "refresh" token
+    Then the login response should not contain a "refresh" token
 
   @A1
   Scenario: Login with non-existing username should return 401
     When I login with username "unknownuser" and password "Password123!"
-    Then the API response status should be 401
+    And the API response status should be 401
     And the login error code should be "AUTH_INVALID_CREDENTIALS"
     And the login error message should be "Invalid username or password"
     And the login response should not contain a "access" token
-    And the login response should not contain a "refresh" token
+    Then the login response should not contain a "refresh" token
