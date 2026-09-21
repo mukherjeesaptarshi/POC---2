@@ -12,7 +12,11 @@ module.exports = {
     paths: ["src/features/web/**/*.feature"],
     require: ["src/steps/**/*.ts", "src/support/**/*.ts"],
     requireModule: ["tsx/cjs"],
-    format: ["progress", "html:reports/web-cucumber-report.html"],
+    format: [
+      "progress",
+      "html:reports/web-cucumber-report.html",
+      "json:reports/web-cucumber-report.json",
+    ],
     publishQuiet: true,
   },
 };

@@ -9,11 +9,14 @@ export class RegistrationPage {
   constructor(private readonly page: Page) {}
 
   async open(): Promise<void> {
-    await this.page.goto('/index.htm');
-    await this.page.getByRole('link', { name: /register/i }).click();
+    await this.page.goto('/parabank/index.htm');
   }
 
-  async register(): Promise<RegistrationCredentials> {
+  async clickRegisterLink(): Promise<void> {
+    await this.page.locator("//div[@id='loginPanel']/p[2]/a").click();
+  }
+
+  async enterRequiredDetails(): Promise<RegistrationCredentials> {
     const username = `webuser${Date.now()}`;
     const password = 'Password123!';
     await this.page.locator('input[name="customer.firstName"]').fill('Web');
@@ -27,8 +30,35 @@ export class RegistrationPage {
     await this.page.locator('input[name="customer.username"]').fill(username);
     await this.page.locator('input[name="customer.password"]').fill(password);
     await this.page.locator('input[name="repeatedPassword"]').fill(password);
-    await this.page.getByRole('button', { name: /register/i }).click();
-    await expect(this.page.getByRole('heading', { name: /accounts overview/i })).toBeVisible();
     return { username, password };
   }
+
+  async clickRegisterButton(): Promise<void> {
+    await this.page.getByRole('button', { name: /register/i }).click();
+  }
+
+  async expectRegistrationMessage(): Promise<void> {
+    const successMessage = this.page.getByText('Your account was created successfully');
+    await expect(successMessage).toBeVisible();
+    await expect(successMessage).toContainText('Your account was created successfully');
+  }
+
+  async expectRegistrationErrorMessage(): Promise<void> {
+    const errorMessages = this.page.locator('.error');
+    await expect(errorMessages.first()).toBeVisible();
+    await expect(errorMessages.first()).toContainText(/required|invalid|must be/i);
+  }
+
+  async register(): Promise<RegistrationCredentials> {
+    await this.clickRegisterLink();
+    const credentials = await this.enterRequiredDetails();
+    await this.clickRegisterButton();
+    await this.expectRegistrationMessage();
+    return credentials;
+  }
+
+  async logout(): Promise<void> {
+    await this.page.locator("//a[@href='logout.htm']").click();
+  }
+
 }

@@ -89,6 +89,7 @@ jobs:
             playwright-report/
             test-results/
             reports/web-cucumber-report.html
+            reports/web-cucumber-report.json
           retention-days: 30
 
   # =========================

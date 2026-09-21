@@ -4,7 +4,7 @@ export class LoginPage {
   constructor(private readonly page: Page) {}
 
   async open(): Promise<void> {
-    await this.page.goto('/index.htm');
+    await this.page.goto('/parabank/index.htm');
   }
 
   async login(username: string, password: string): Promise<void> {
@@ -15,6 +15,16 @@ export class LoginPage {
 
   async expectInvalidCredentials(): Promise<void> {
     await expect(this.page.locator('.error')).toContainText(/could not be verified|required/i);
+  }
+
+  async expectRejectionMessage(): Promise<void> {
+    await expect(this.page.locator('.error')).toContainText(
+      /could not be verified|invalid username or password|please enter a username and password/i,
+    );
+  }
+
+  async expectBlankCredentialsMessage(): Promise<void> {
+    await expect(this.page.locator('.error')).toContainText(/required|username and password/i);
   }
 
   async logout(): Promise<void> {

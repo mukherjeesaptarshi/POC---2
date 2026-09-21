@@ -13,7 +13,11 @@ import {
   MfaChallengeResponse,
 } from "../models/auth.model";
 
-import { getApiConfig, getWebBaseUrl } from "../config/env";
+import {
+  getApiConfig,
+  getWebBaseUrl,
+  shouldIgnoreWebHttpsErrors,
+} from "../config/env";
 import { DriverFactory } from "../web/driverFactory";
 import { WebDataFactory } from "../web/webDataFactory";
 import { AccountsOverviewPage } from "../../tests/web/pages/accountsOverviewPage";
@@ -136,6 +140,7 @@ export class CustomWorld extends World {
     this.webBrowser = await DriverFactory.createBrowser();
     this.webContext = await this.webBrowser.newContext({
       baseURL: getWebBaseUrl(),
+      ignoreHTTPSErrors: shouldIgnoreWebHttpsErrors(),
     });
     this.webPage = await this.webContext.newPage();
     this.loginPage = new LoginPage(this.webPage);

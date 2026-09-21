@@ -1,5 +1,8 @@
 import { APIRequestContext, expect, request } from "@playwright/test";
-import { getWebBaseUrl } from "../config/env";
+import {
+  getWebBaseUrl,
+  shouldIgnoreWebHttpsErrors,
+} from "../config/env";
 import { RegistrationCredentials } from "../../tests/web/pages/registrationPage";
 
 export class WebDataFactory {
@@ -8,6 +11,7 @@ export class WebDataFactory {
   async createCustomer(): Promise<RegistrationCredentials> {
     this.requestContext = await request.newContext({
       baseURL: getWebBaseUrl(),
+      ignoreHTTPSErrors: shouldIgnoreWebHttpsErrors(),
     });
 
     const credentials: RegistrationCredentials = {
@@ -15,7 +19,7 @@ export class WebDataFactory {
       password: "Password123!",
     };
 
-    const response = await this.requestContext.post("/register.htm", {
+    const response = await this.requestContext.post("/parabank/register.htm", {
       form: {
         "customer.firstName": "Web",
         "customer.lastName": "ApiSeed",
@@ -31,8 +35,12 @@ export class WebDataFactory {
       },
     });
 
-    expect(response.ok(), `Web data seed failed: ${response.status()}`).toBeTruthy();
-    expect(await response.text()).toMatch(/welcome|account overview|successfully/i);
+    const responseBody = await response.text();
+    expect(
+      response.ok(),
+      `Web data seed failed: ${response.status()} ${responseBody.slice(0, 500)}`,
+    ).toBeTruthy();
+    expect(responseBody).toMatch(/welcome|account overview|successfully/i);
     return credentials;
   }
 

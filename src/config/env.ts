@@ -41,3 +41,10 @@ export function getWebBaseUrl(): string {
     "https://parabank.parasoft.com/parabank"
   );
 }
+
+export function shouldIgnoreWebHttpsErrors(): boolean {
+  return (
+    process.env.WEB_IGNORE_HTTPS_ERRORS === "true" ||
+    getWebBaseUrl().includes("parabank.parasoft.com")
+  );
+}
