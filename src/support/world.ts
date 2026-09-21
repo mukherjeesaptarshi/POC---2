@@ -1,12 +1,27 @@
 import { World, IWorldOptions, setWorldConstructor } from "@cucumber/cucumber";
-import { APIRequestContext, APIResponse, request } from "@playwright/test";
+import {
+  APIRequestContext,
+  APIResponse,
+  Browser,
+  BrowserContext,
+  Page,
+  request,
+} from "@playwright/test";
 import {
   ErrorResponse,
   LoginResponse,
   MfaChallengeResponse,
 } from "../models/auth.model";
 
-import { getApiConfig } from "../config/env";
+import { getApiConfig, getWebBaseUrl } from "../config/env";
+import { DriverFactory } from "../web/driverFactory";
+import { WebDataFactory } from "../web/webDataFactory";
+import { AccountsOverviewPage } from "../../tests/web/pages/accountsOverviewPage";
+import { LoginPage } from "../../tests/web/pages/loginPage";
+import {
+  RegistrationCredentials,
+  RegistrationPage,
+} from "../../tests/web/pages/registrationPage";
 import AuthService from "@src/services/authService";
 import AccountService from "@src/services/accountService";
 import BankingPaymentService from "@src/services/paymentService";
@@ -80,6 +95,15 @@ export class CustomWorld extends World {
   adminBody!: any;
   schemaSweepCompleted = false;
 
+  webBrowser!: Browser;
+  webContext!: BrowserContext;
+  webPage!: Page;
+  loginPage!: LoginPage;
+  registrationPage!: RegistrationPage;
+  accountsOverviewPage!: AccountsOverviewPage;
+  webCredentials!: RegistrationCredentials;
+  webDataFactory!: WebDataFactory;
+
   constructor(options: IWorldOptions) {
     super(options);
   }
@@ -106,6 +130,24 @@ export class CustomWorld extends World {
     if (this.requestContext) {
       await this.requestContext.dispose();
     }
+  }
+
+  async initializeWeb(): Promise<void> {
+    this.webBrowser = await DriverFactory.createBrowser();
+    this.webContext = await this.webBrowser.newContext({
+      baseURL: getWebBaseUrl(),
+    });
+    this.webPage = await this.webContext.newPage();
+    this.loginPage = new LoginPage(this.webPage);
+    this.registrationPage = new RegistrationPage(this.webPage);
+    this.accountsOverviewPage = new AccountsOverviewPage(this.webPage);
+    this.webDataFactory = new WebDataFactory();
+  }
+
+  async disposeWeb(): Promise<void> {
+    await this.webDataFactory?.dispose();
+    await this.webContext?.close();
+    await this.webBrowser?.close();
   }
 }
 

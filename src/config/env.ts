@@ -33,3 +33,11 @@ export function getApiConfig(): ApiConfig {
       "Password123!",
   };
 }
+
+export function getWebBaseUrl(): string {
+  return (
+    process.env.WEB_BASE_URL ||
+    process.env.PARABANK_BASE_URL ||
+    "https://parabank.parasoft.com/parabank"
+  );
+}

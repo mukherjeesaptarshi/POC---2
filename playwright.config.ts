@@ -13,6 +13,8 @@ dotenv.config();
  */
 export default defineConfig({
   testDir: './tests',
+  timeout: 30_000,
+  expect: { timeout: 10_000 },
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -35,7 +37,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    baseURL: process.env.MOBILE_BASE_URL || process.env.PARABANK_BASE_URL,
+    baseURL: process.env.WEB_BASE_URL || process.env.PARABANK_BASE_URL || 'https://parabank.parasoft.com/parabank',
   },
 
   /* Configure projects for major browsers */
@@ -43,81 +45,6 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] },
-    },
-
-    {
-      name: 'firefox',
-      use: { ...devices['Desktop Firefox'] },
-    },
-
-    {
-      name: 'webkit',
-      use: { ...devices['Desktop Safari'] },
-    },
-
-    /* iPad portrait mobile project for mobile testing */
-    {
-      name: 'iPad',
-      use: {
-        viewport: { width: 768, height: 1024 },
-        deviceScaleFactor: 2,
-        isMobile: true,
-        hasTouch: true,
-        userAgent:
-          'Mozilla/5.0 (iPad; CPU OS 13_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/13.1.2 Mobile/15E148 Safari/604.1',
-      },
-    },
-
-    /* Test against mobile viewports. */
-    {
-      name: 'iPhone 12',
-      use: { ...devices['iPhone 12'] },
-    },
-    {
-      name: 'iPhone 12 Pro Max',
-      use: { ...devices['iPhone 12 Pro Max'] },
-    },
-    {
-      name: 'Pixel 5',
-      use: { ...devices['Pixel 5'] },
-    },
-    {
-      name: 'Galaxy S9+',
-      use: { ...devices['Galaxy S9+'] },
-    },
-    {
-      name: 'iPad Mini',
-      use: { ...devices['iPad Mini'] },
-    },
-
-    /* Test against branded browsers. */
-    {
-      name: 'Microsoft Edge',
-      use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    },
-    {
-      name: 'Google Chrome',
-      use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    },
-    {
-      name: 'Desktop Chrome Fullscreen',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1920, height: 1080 },
-        launchOptions: {
-          args: ['--start-fullscreen'],
-        },
-      },
-    },
-    {
-      name: 'Desktop Firefox Fullscreen',
-      use: {
-        ...devices['Desktop Firefox'],
-        viewport: { width: 1920, height: 1080 },
-        launchOptions: {
-          args: ['-fullscreen'],
-        },
-      },
     },
   ],
 

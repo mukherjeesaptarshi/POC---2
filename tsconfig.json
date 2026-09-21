@@ -11,12 +11,14 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node", "@cucumber/cucumber"]
+    "types": ["node", "@cucumber/cucumber", "@playwright/test"]
   },
 
   "include": [
     "src/**/*.ts",
     "utils/**/*.ts",
+    "tests/**/*.ts",
+    "playwright.config.ts"
   ]
 
 }

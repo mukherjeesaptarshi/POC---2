@@ -3,24 +3,48 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+
   "scripts": {
     "test": "tsx scripts/runApiTests.ts",
+
+    "test:web": "playwright test",
+    "test:web:smoke": "playwright test tests/web/smoke.spec.ts --project=chromium",
+    "test:web:headed": "playwright test tests/web/smoke.spec.ts --project=chromium --headed",
+    "test:web:bdd": "cucumber-js --profile web",
+
     "test:api": "cucumber-js",
     "test:api:shard": "node scripts/runApiShard.ts",
     "test:api:lifecycle": "cross-env ACCESS_TOKEN_SECONDS=2 cucumber-js --profile api --tags @A3",
-    "start:locale:server": "node src/mock-server/server.js"
+
+    "start:locale:server": "node src/mock-server/server.js",
+
+    "bdd": "cucumber-js",
+
+    "bdd:web": "cucumber-js --profile web",
+    "bdd:web:headed": "cross-env HEADLESS=false cucumber-js --profile web",
+
+    "bdd:login": "cucumber-js --profile web --tags @login",
+    "bdd:login:headed": "cross-env HEADLESS=false cucumber-js --profile web --tags @login",
+
+    "bdd:registration": "cucumber-js --profile web --tags @registration",
+    "bdd:registration:headed": "cross-env HEADLESS=false cucumber-js --profile web --tags @registration"
   },
+
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/naresh-sagathiya/api-automation-anz-poc.git"
+    "url": "git+https://github.com/mukherjeesaptarshi/POC---2.git"
   },
+
   "keywords": [],
-  "author": "",
+  "author": "Saptarshi Mukherjee",
   "license": "ISC",
+
   "bugs": {
-    "url": "https://github.com/naresh-sagathiya/api-automation-anz-poc/issues"
+    "url": "https://github.com/mukherjeesaptarshi/POC---2/issues"
   },
-  "homepage": "https://github.com/naresh-sagathiya/api-automation-anz-poc#readme",
+
+  "homepage": "https://github.com/mukherjeesaptarshi/POC---2#readme",
+
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
     "@playwright/test": "^1.62.1",
@@ -30,6 +54,7 @@
     "tsx": "^4.23.12",
     "typescript": "^7.0.2"
   },
+
   "dependencies": {
     "@cucumber/cucumber": "^13.2.1",
     "ajv": "^8.20.0",

@@ -13,4 +13,5 @@ node_modules/
 /reports/api-*.log
 /reports/api-cucumber-report-*.json
 /reports/api-cucumber-report-*.html
+/reports/web-cucumber-report.html
 /tests/reports/

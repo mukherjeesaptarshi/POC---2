@@ -8,4 +8,11 @@ module.exports = {
     format: ["progress", "html:reports/api-cucumber-report.html"],
     publishQuiet: true,
   },
+  web: {
+    paths: ["src/features/web/**/*.feature"],
+    require: ["src/steps/**/*.ts", "src/support/**/*.ts"],
+    requireModule: ["tsx/cjs"],
+    format: ["progress", "html:reports/web-cucumber-report.html"],
+    publishQuiet: true,
+  },
 };

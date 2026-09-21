@@ -53,3 +53,26 @@ The API scenarios cover login, MFA, token lifecycle, customer authorization, RBA
 Each Cucumber scenario receives a new request context and World. Tests that create seeded data register cleanup through the data-factory steps so failures do not leave test customers behind.
 
 The local mock server is a contract test double. It validates the automation framework and API expectations; it is not a substitute for contract tests against a deployed banking service.
+
+## Web smoke pack
+
+The Playwright web layer uses page objects for Login, Registration, and Accounts Overview. It covers registration with automatic login, valid login, invalid login, and blank credentials.
+
+Set `WEB_BASE_URL` or `PARABANK_BASE_URL` in `.env` to select the target. The default is the public ParaBank demo application.
+
+Install the browser once, then run the smoke pack:
+
+```powershell
+npx playwright install chromium
+npm run test:web:smoke
+```
+
+The CI job runs the same Chromium smoke pack on every push and pull request and uploads the HTML report and failure artifacts.
+
+The equivalent Cucumber BDD suite can be run with:
+
+```powershell
+npm run test:web:bdd
+```
+
+Web login and Accounts Overview scenarios seed their customer through `WebDataFactory`, which submits the public ParaBank registration HTTP endpoint directly before opening the UI. The registration scenario is intentionally the exception because registration itself is the UI behavior under test; it does not perform hidden manual setup.
