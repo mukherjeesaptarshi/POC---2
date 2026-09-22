@@ -40,6 +40,20 @@ When(
       return;
     }
 
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "open new account" &&
+        targetType.toLowerCase() === "button") {
+      await this.accountsOverviewPage.clickOpenNewAccountButton();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "savings" &&
+        targetType.toLowerCase() === "drop down") {
+      await this.accountsOverviewPage.selectAccountType("SAVINGS");
+      return;
+    }
+
     throw new Error(
       `Unsupported web action: ${action} on ${target} ${targetType}`,
     );
@@ -69,9 +83,45 @@ When(
       return;
     }
 
+    if (validationTarget.toLowerCase() === "success message") {
+      await this.accountsOverviewPage.expectAccountOpenedMessage();
+      return;
+    }
+
     throw new Error(`Unsupported web validation target: ${validationTarget}`);
   },
 );
+
+When("I click on the open new account link", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.clickOpenNewAccountLink();
+});
+
+When("I click the browser back button", async function (this: CustomWorld) {
+  await this.loginPage.goBack();
+});
+
+When('I register leaving the {string} field blank', async function (this: CustomWorld, fieldName: string) {
+  await this.registrationPage.open();
+  await this.registrationPage.clickRegisterLink();
+  await this.registrationPage.fillRegistrationForm({
+    firstName: fieldName === 'first name' ? '' : 'Web',
+    lastName: fieldName === 'last name' ? '' : 'Smoke',
+    address: fieldName === 'address' ? '' : '1 Test Street',
+    city: fieldName === 'city' ? '' : 'Sydney',
+    state: fieldName === 'state' ? '' : 'NSW',
+    zipCode: fieldName === 'zip code' ? '' : '2000',
+    phoneNumber: fieldName === 'phone number' ? '' : '0400000000',
+    ssn: fieldName === 'ssn' ? '' : '123456789',
+    username: fieldName === 'username' ? '' : `webuser${Date.now()}`,
+    password: fieldName === 'password' ? '' : 'Password123!',
+    confirmPassword: fieldName === 'password' ? '' : 'Password123!',
+  });
+  await this.registrationPage.clickRegisterButton();
+});
+
+Then('I validate the blank {string} field error message', async function (this: CustomWorld, fieldName: string) {
+  await this.registrationPage.expectBlankFieldError(fieldName);
+});
 
 // Then("I logout from the account", async function (this: CustomWorld) {
 //   await this.registrationPage.logout();
@@ -115,5 +165,12 @@ Then(
   async function (this: CustomWorld) {
     await this.loginPage.expectInvalidCredentials();
     await expect(this.webPage).toHaveURL(/index\.htm/);
+  },
+);
+
+Then(
+  "the protected page should be inaccessible after logout",
+  async function (this: CustomWorld) {
+    await this.loginPage.expectProtectedPageInaccessibleAfterLogout();
   },
 );

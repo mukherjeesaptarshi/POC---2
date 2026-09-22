@@ -1,16 +1,12 @@
-name: Playwright Tests
+name: CI Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - master
-      - api-automation-integration
-
   pull_request:
-    branches:
-      - main
-      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   # =========================

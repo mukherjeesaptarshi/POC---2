@@ -30,4 +30,24 @@ export class LoginPage {
   async logout(): Promise<void> {
     await this.page.getByRole('link', { name: /log out/i }).click();
   }
+
+  async goBack(): Promise<void> {
+    await this.page.goBack().catch(() => undefined);
+  }
+
+  async expectProtectedPageInaccessibleAfterLogout(): Promise<void> {
+    const protectedUrlPatterns = [/overview\.htm/i, /account.*\.htm/i, /billpay\.htm/i, /transfer\.htm/i];
+    const currentUrl = this.page.url();
+
+    for (const pattern of protectedUrlPatterns) {
+      if (pattern.test(currentUrl)) {
+        throw new Error(`Protected page remained accessible after logout: ${currentUrl}`);
+      }
+    }
+
+    await expect(this.page.locator('input[name="username"]')).toBeVisible();
+    await expect(this.page.locator('input[name="password"]')).toBeVisible();
+    await expect(this.page.getByRole('button', { name: /log in/i })).toBeVisible();
+    await expect(this.page).toHaveURL(/index\.htm|login\.htm/i);
+  }
 }

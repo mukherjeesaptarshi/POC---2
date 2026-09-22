@@ -10,6 +10,16 @@ Feature: Web login validation
     And I log in with the registered web credentials
     Then the web Accounts Overview should show a default account with a non-null balance
 
+  @browser_back_after_logout
+  Scenario: Browser back after logout
+    Given I open the web registration page
+    When I have registered a new web customer
+    And I "click" on the "logout" "button"
+    And I log in with the registered web credentials
+    And I "click" on the "logout" "button"
+    And I click the browser back button
+    Then the protected page should be inaccessible after logout
+    
 
   @login_invalid_credentials
   Scenario: Login is rejected with invalid credentials
@@ -37,17 +47,3 @@ Feature: Web login validation
     Given I open the web login page
     When I log in to the web application with username "" and password ""
     Then I validate the "blank rejection message"
-
-
-  @multiple_login
-  Scenario: Login succeeds with valid registered credentials
-    Given I open the web registration page
-    When I have registered a new web customer
-    And I "click" on the "logout" "button"
-    And I log in with the registered web credentials
-    And the web Accounts Overview should show a default account with a non-null balance
-    #And I open the web registration page
-    #And I have registered a new web customer
-    #And I "click" on the "logout" "button"
-    #And I log in with the registered web credentials
-    #Then the web Accounts Overview should show a default account with a non-null balance
