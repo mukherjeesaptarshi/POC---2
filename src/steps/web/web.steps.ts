@@ -48,6 +48,20 @@ When(
     }
 
     if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "transfer" &&
+        targetType.toLowerCase() === "button") {
+      await this.accountsOverviewPage.clickTransferButton();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "send payment" &&
+        targetType.toLowerCase() === "button") {
+      await this.accountsOverviewPage.clickSendPaymentButton();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
         target.toLowerCase() === "savings" &&
         targetType.toLowerCase() === "drop down") {
       await this.accountsOverviewPage.selectAccountType("SAVINGS");
@@ -88,12 +102,88 @@ When(
       return;
     }
 
+    if (validationTarget.toLowerCase() === "savings account in accounts overview") {
+      await this.accountsOverviewPage.expectSavingsAccountVisibleInOverview();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "checking account in accounts overview") {
+      await this.accountsOverviewPage.expectCheckingAccountVisibleInOverview();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "accounts overview total matches individual balances") {
+      await this.accountsOverviewPage.expectAccountsOverviewTotalMatchesBalances();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "insufficient funding error message") {
+      await this.accountsOverviewPage.expectInsufficientFundingErrorMessage();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "bill pay success message") {
+      await this.accountsOverviewPage.expectBillPaySuccessMessage();
+      return;
+    }
+
+    if (validationTarget.toLowerCase().startsWith("bill pay blank ") && validationTarget.toLowerCase().endsWith(" error message")) {
+      const fieldName = validationTarget
+        .replace(/^bill pay blank /i, "")
+        .replace(/ error message$/i, "")
+        .trim();
+      await this.accountsOverviewPage.expectBillPayFieldError(fieldName);
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "transfer fund error message") {
+      await this.accountsOverviewPage.expectTransferFundsErrorMessage();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "transfer complete message") {
+      await this.accountsOverviewPage.expectTransferCompleteMessage();
+      return;
+    }
+
     throw new Error(`Unsupported web validation target: ${validationTarget}`);
   },
 );
 
 When("I click on the open new account link", async function (this: CustomWorld) {
   await this.accountsOverviewPage.clickOpenNewAccountLink();
+});
+
+When("I click on the transfer funds link", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.clickTransferFundsLink();
+});
+
+When("I click on the bill pay link", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.clickBillPayLink();
+});
+
+When('I enter {string} in the {string} textbox', async function (this: CustomWorld, value: string, fieldName: string) {
+  await this.accountsOverviewPage.enterText(fieldName, value);
+});
+
+When("I fill all bill payment details", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.fillBillPayForm();
+});
+
+When("I open 5 new accounts sequentially", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.openMultipleNewAccounts(5);
+});
+
+When('I fill all bill payment details except the {string} field', async function (this: CustomWorld, fieldName: string) {
+  await this.accountsOverviewPage.fillBillPayForm(fieldName);
+});
+
+When("I attempt to open an account with insufficient funding balance", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.attemptOpenAccountWithInsufficientFundingBalance();
+});
+
+When('I select the {string} from the {string} dropdown', async function (this: CustomWorld, optionLabel: string, fieldName: string) {
+  await this.accountsOverviewPage.selectDropdownOption(fieldName, optionLabel);
 });
 
 When("I click the browser back button", async function (this: CustomWorld) {
@@ -157,6 +247,13 @@ Then(
   "the web Accounts Overview should show a default account with a non-null balance",
   async function (this: CustomWorld) {
     await this.accountsOverviewPage.expectLoadedWithDefaultAccount();
+  },
+);
+
+Then(
+  "the Accounts Overview total equals the sum of all individual balances",
+  async function (this: CustomWorld) {
+    await this.accountsOverviewPage.expectAccountsOverviewTotalMatchesBalances();
   },
 );
 
