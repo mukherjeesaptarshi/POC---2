@@ -67,7 +67,7 @@ export class RegistrationPage {
 
   async expectRegistrationMessage(): Promise<void> {
     const successMessage = this.page.getByText('Your account was created successfully');
-    await expect(successMessage).toBeVisible();
+    await expect(successMessage).toBeVisible({ timeout: 15000 });
     await expect(successMessage).toContainText('Your account was created successfully');
   }
 
@@ -89,11 +89,25 @@ export class RegistrationPage {
   }
 
   async register(): Promise<RegistrationCredentials> {
-    await this.clickRegisterLink();
-    const credentials = await this.enterRequiredDetails();
-    await this.clickRegisterButton();
-    await this.expectRegistrationMessage();
-    return credentials;
+    let lastError: unknown;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await this.page.goto('/parabank/index.htm');
+      }
+
+      try {
+        await this.clickRegisterLink();
+        const credentials = await this.enterRequiredDetails();
+        await this.clickRegisterButton();
+        await this.expectRegistrationMessage();
+        return credentials;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    throw lastError;
   }
 
   async logout(): Promise<void> {

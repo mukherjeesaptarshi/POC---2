@@ -146,9 +146,38 @@ When(
       return;
     }
 
+    if (validationTarget.toLowerCase() === "debit and credit in both accounts") {
+      await this.accountsOverviewPage.expectDebitAndCreditInBothAccounts();
+      return;
+    }
+
     throw new Error(`Unsupported web validation target: ${validationTarget}`);
   },
 );
+
+Then("I validate the debit and credit in both accounts", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectDebitAndCreditInBothAccounts();
+});
+
+Then("I validate the source account balance is zero", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectSourceAccountBalanceIsZero();
+});
+
+Then("I validate the transfer amount is rejected", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectTransferAmountRejected();
+});
+
+Then("I validate the same-account transfer is rejected", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectSameAccountTransferRejected();
+});
+
+Then("I validate the final balance is opening balance minus the transferred amounts", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectRapidTransferBalances();
+});
+
+Then("I validate 20 ledger rows exist with 10 debits and 10 credits", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectRapidTransferLedgerRows();
+});
 
 When("I click on the open new account link", async function (this: CustomWorld) {
   await this.accountsOverviewPage.clickOpenNewAccountLink();
@@ -156,6 +185,22 @@ When("I click on the open new account link", async function (this: CustomWorld) 
 
 When("I click on the transfer funds link", async function (this: CustomWorld) {
   await this.accountsOverviewPage.clickTransferFundsLink();
+});
+
+When("I transfer the full available balance to the second account", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.transferFullAvailableBalanceToSecondAccount();
+});
+
+When('I attempt to transfer {string} to the second account', async function (this: CustomWorld, amount: string) {
+  await this.accountsOverviewPage.attemptTransferToSecondAccount(amount);
+});
+
+When('I attempt a same-account transfer of {string}', async function (this: CustomWorld, amount: string) {
+  await this.accountsOverviewPage.attemptSameAccountTransfer(amount);
+});
+
+When('I perform {int} rapid transfers of {string} to the second account', async function (this: CustomWorld, count: number, amount: string) {
+  await this.accountsOverviewPage.performRapidTransfers(count, amount);
 });
 
 When("I click on the bill pay link", async function (this: CustomWorld) {
