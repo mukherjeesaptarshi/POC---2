@@ -7,7 +7,7 @@ Scenario: Transfer funds without entering any values
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I "click" on the "transfer" "button"
     Then I validate the "transfer fund error message"
 
@@ -17,7 +17,7 @@ Scenario: Transfer funds in same account
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I enter "100" in the "amount" textbox
     And I "click" on the "transfer" "button"
     Then I validate the "transfer complete message"
@@ -28,11 +28,11 @@ Scenario: Transfer funds in different accounts
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"    
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I "click" on the "savings" "drop down"
     And I "click" on the "open new account" "button"
     And I validate the "success message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I enter "100" in the "amount" textbox
     And I select the "second option" from the "to account" dropdown
     And I "click" on the "transfer" "button"
@@ -45,11 +45,11 @@ Scenario: Transfer the full available balance to zero out an account
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I "click" on the "savings" "drop down"
     And I "click" on the "open new account" "button"
     And I validate the "success message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I transfer the full available balance to the second account
     Then I validate the source account balance is zero
 
@@ -59,11 +59,11 @@ Scenario Outline: Reject invalid transfer amount <variant>
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I "click" on the "savings" "drop down"
     And I "click" on the "open new account" "button"
     And I validate the "success message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I attempt to transfer "<amount>" to the second account
     Then I validate the transfer amount is rejected
 
@@ -81,7 +81,7 @@ Scenario: Reject transfer from an account to itself
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I attempt a same-account transfer of "10.00"
     Then I validate the same-account transfer is rejected
 
@@ -91,11 +91,11 @@ Scenario: Complete 10 rapid transfers and reconcile balances and ledger rows
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I "click" on the "savings" "drop down"
     And I "click" on the "open new account" "button"
     And I validate the "success message"
-    And I click on the transfer funds link
+    And I "click" on the "transfer funds" "link"
     And I perform 10 rapid transfers of "10.00" to the second account
     Then I validate the final balance is opening balance minus the transferred amounts
     And I validate 20 ledger rows exist with 10 debits and 10 credits

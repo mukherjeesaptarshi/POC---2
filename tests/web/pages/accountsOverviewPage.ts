@@ -1,4 +1,17 @@
 import { expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
+type BillPayDetails = {
+  payeeName: string;
+  address: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  phoneNumber: string;
+  accountNumber: string;
+  amount: string;
+};
 
 export class AccountsOverviewPage {
   private transferBaseline?: {
@@ -47,6 +60,26 @@ export class AccountsOverviewPage {
     await this.page.getByRole('link', { name: /transfer funds/i }).click();
   }
 
+  async clickAccountsOverviewLink(): Promise<void> {
+    await this.page.getByRole('link', { name: /accounts overview/i }).click();
+    await expect(this.page.locator('#accountTable')).toBeVisible({ timeout: 15000 });
+  }
+
+  async clickAccountNumberLink(): Promise<void> {
+    await this.page.locator('#accountTable tbody tr').first().getByRole('link').click();
+    await expect(this.page.locator('#transactionTable')).toBeVisible({ timeout: 15000 });
+  }
+
+  async clickTransactionLink(): Promise<void> {
+    await this.page.getByRole('link', { name: /transaction/i }).first().click();
+  }
+
+  async clickFindTransactionsLink(): Promise<void> {
+    // await this.page.getByRole('link', { name: 'Find Transactions' }).click();
+    await this.page.pause();
+    await this.page.locator("//a[text()='Find Transactions']").click();
+  }
+
   async clickBillPayLink(): Promise<void> {
     await this.page.getByRole('link', { name: /bill pay/i }).click();
   }
@@ -55,7 +88,13 @@ export class AccountsOverviewPage {
     await this.page.locator('input[value="Send Payment"]').click();
   }
 
-  async fillBillPayForm(exceptField?: string): Promise<void> {
+  async payBill(details: BillPayDetails): Promise<void> {
+    await this.fillBillPayForm(undefined, details);
+    await this.clickSendPaymentButton();
+    await this.expectBillPaySuccessMessage();
+  }
+
+  async fillBillPayForm(exceptField?: string, details?: Partial<BillPayDetails>): Promise<void> {
     const values: Record<string, string> = {
       'payee name': 'ACME Utilities',
       address: '10 Market St',
@@ -67,6 +106,17 @@ export class AccountsOverviewPage {
       'verify account number': '123456',
       amount: '25.00',
     };
+    if (details) {
+      values['payee name'] = details.payeeName ?? values['payee name'];
+      values.address = details.address ?? values.address;
+      values.city = details.city ?? values.city;
+      values.state = details.state ?? values.state;
+      values['zip code'] = details.zipCode ?? values['zip code'];
+      values['phone number'] = details.phoneNumber ?? values['phone number'];
+      values['account number'] = details.accountNumber ?? values['account number'];
+      values['verify account number'] = details.accountNumber ?? values['verify account number'];
+      values.amount = details.amount ?? values.amount;
+    }
 
     const skipField = exceptField?.trim().toLowerCase();
     for (const [fieldName, value] of Object.entries(values)) {
@@ -75,6 +125,44 @@ export class AccountsOverviewPage {
         continue;
       }
       await this.page.locator(`input[name="${this.getBillPayFieldName(fieldName)}"]`).fill(value);
+    }
+  }
+
+  async paySameBillTwice(): Promise<void> {
+    const details: BillPayDetails = {
+      payeeName: 'ACME Utilities',
+      address: '10 Market St',
+      city: 'Sydney',
+      state: 'NSW',
+      zipCode: '2000',
+      phoneNumber: '0400123456',
+      accountNumber: '123456',
+      amount: '25.00',
+    };
+
+    await this.payBill(details);
+    await this.clickBillPayLink();
+    await this.payBill(details);
+  }
+
+  async payBillsFromCsv(fileName: string): Promise<void> {
+    const csvPath = resolve(process.cwd(), 'src', 'features', 'web', fileName);
+    const lines = readFileSync(csvPath, 'utf8').trim().split(/\r?\n/);
+    const headers = lines.shift()?.split(',') ?? [];
+    const rows = lines.map((line) => {
+      const values = line.split(',');
+      return Object.fromEntries(headers.map((header, index) => [header, values[index] ?? ''])) as BillPayDetails;
+    });
+
+    if (rows.length !== 10) {
+      throw new Error(`Expected 10 billers in ${fileName}, found ${rows.length}.`);
+    }
+
+    for (const [index, row] of rows.entries()) {
+      await this.payBill(row);
+      if (index < rows.length - 1) {
+        await this.clickBillPayLink();
+      }
     }
   }
 
@@ -100,6 +188,45 @@ export class AccountsOverviewPage {
     await expect(content).toContainText(/was successful/i);
   }
 
+  async expectTransactionDetails(): Promise<void> {
+    await expect(this.page.locator('body')).toContainText(/transaction details|transaction id|amount|description/i);
+  }
+
+  async expectTwoBillPaymentDebitEntries(): Promise<void> {
+    await this.clickAccountsOverviewLink();
+    await this.clickAccountNumberLink();
+
+    const paymentRows = this.page.locator('#transactionTable tbody tr').filter({ hasText: /ACME Utilities|25\.00/i });
+    await expect(paymentRows).toHaveCount(2, { timeout: 15000 });
+    const debitValues = await paymentRows.evaluateAll((rows) => rows.map((row) => {
+      const cells = [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim() ?? '');
+      return cells[2] ?? '';
+    }));
+    expect(debitValues.filter(Boolean)).toHaveLength(2);
+  }
+
+  async expectCsvBillPaymentDebits(fileName: string): Promise<void> {
+    const csvPath = resolve(process.cwd(), 'src', 'features', 'web', fileName);
+    const lines = readFileSync(csvPath, 'utf8').trim().split(/\r?\n/);
+    const headers = lines.shift()?.split(',') ?? [];
+    const rows = lines.map((line) => Object.fromEntries(headers.map((header, index) => [header, line.split(',')[index] ?? ''])));
+    const expectedTotalCents = rows.reduce((total, row) => total + this.parseCurrencyValue(row.amount), 0);
+
+    await this.clickAccountsOverviewLink();
+    await this.clickAccountNumberLink();
+
+    const transactionRows = this.page.locator('#transactionTable tbody tr');
+    await expect(transactionRows).not.toHaveCount(0, { timeout: 15000 });
+    const debits = await transactionRows.evaluateAll((rows) => rows.map((row) => {
+      const cells = [...row.querySelectorAll('td')].map((cell) => cell.textContent?.trim() ?? '');
+      return cells[2] ?? '';
+    }).filter(Boolean));
+    const actualDebitCents = debits.reduce((total, debit) => total + this.parseCurrencyValue(debit), 0);
+
+    expect(debits.filter(Boolean)).toHaveLength(10);
+    expect(actualDebitCents).toBe(expectedTotalCents);
+  }
+
   async expectBillPayFieldError(fieldName: string): Promise<void> {
     const normalized = fieldName.toLowerCase().trim();
     const errorMap: Record<string, RegExp> = {
@@ -116,6 +243,24 @@ export class AccountsOverviewPage {
 
     const regex = errorMap[normalized] ?? /required/i;
     await expect(this.page.locator('body')).toContainText(regex);
+  }
+
+  async expectBillPayAccountNumberMismatchError(): Promise<void> {
+    await expect(this.page.locator('body')).toContainText(/account numbers?.*(do not match|mismatch)|do not match.*account numbers?/i);
+  }
+
+  async expectBillPayInvalidAmountError(): Promise<void> {
+    const amountInput = this.page.locator('input[name="amount"]');
+    const bodyText = await this.page.locator('body').innerText();
+    const hasValidationMessage = /amount.*(invalid|required|number|valid)|invalid.*amount/i.test(bodyText);
+    const hasNativeValidation = await amountInput.evaluate((element) => !(element as HTMLInputElement).form?.checkValidity());
+
+    expect(hasValidationMessage || hasNativeValidation).toBeTruthy();
+  }
+
+  async expectBillPayAmountError(): Promise<void> {
+    await expect(this.page.locator('body')).toContainText(/amount|balance|insufficient|funds|cannot|error/i);
+    await expect(this.page.locator('body')).not.toContainText(/Bill Payment Complete.*was successful/i);
   }
 
   async selectAccountType(type: 'CHECKING' | 'SAVINGS'): Promise<void> {
@@ -235,6 +380,17 @@ export class AccountsOverviewPage {
 
   async enterText(fieldName: string, value: string): Promise<void> {
     const normalized = fieldName.toLowerCase().trim();
+    const billPayFieldNames: Record<string, string> = {
+      'verify account number': 'verifyAccount',
+      amount: 'amount',
+    };
+
+    const billPayFieldName = billPayFieldNames[normalized];
+    if (billPayFieldName && await this.page.locator(`input[name="${billPayFieldName}"]`).count() > 0) {
+      await this.page.locator(`input[name="${billPayFieldName}"]`).fill(value);
+      return;
+    }
+
     if (normalized === 'amount') {
       await this.page.locator('#amount').fill(value);
       if (this.transferBaseline) {

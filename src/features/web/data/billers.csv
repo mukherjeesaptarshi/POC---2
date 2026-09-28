@@ -1,0 +1,11 @@
+payeeName,address,city,state,zipCode,phoneNumber,accountNumber,amount
+Biller 01,1 Market Street,Sydney,NSW,2000,0400000001,100001,5.00
+Biller 02,2 Market Street,Sydney,NSW,2000,0400000002,100002,7.50
+Biller 03,3 Market Street,Sydney,NSW,2000,0400000003,100003,10.00
+Biller 04,4 Market Street,Sydney,NSW,2000,0400000004,100004,12.50
+Biller 05,5 Market Street,Sydney,NSW,2000,0400000005,100005,15.00
+Biller 06,6 Market Street,Sydney,NSW,2000,0400000006,100006,17.50
+Biller 07,7 Market Street,Sydney,NSW,2000,0400000007,100007,20.00
+Biller 08,8 Market Street,Sydney,NSW,2000,0400000008,100008,22.50
+Biller 09,9 Market Street,Sydney,NSW,2000,0400000009,100009,25.00
+Biller 10,10 Market Street,Sydney,NSW,2000,0400000010,100010,27.50

@@ -7,7 +7,7 @@ Scenario: Send Payment with all values
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the bill pay link
+    And I "click" on the "bill pay" "link"
     And I fill all bill payment details
     And I "click" on the "send payment" "button"
     And I validate the "bill pay success message"

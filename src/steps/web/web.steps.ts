@@ -10,9 +10,9 @@ When("I register a new web customer", async function (this: CustomWorld) {
   this.webCredentials = await this.registrationPage.register();
 });
 
-When("I click on the Register link", async function (this: CustomWorld) {
-  await this.registrationPage.clickRegisterLink();
-});
+// When("I click on the Register link", async function (this: CustomWorld) {
+//   await this.registrationPage.clickRegisterLink();
+// });
 
 When("I enter all the required details", async function (this: CustomWorld) {
   this.webCredentials = await this.registrationPage.enterRequiredDetails();
@@ -34,6 +34,13 @@ When(
     }
 
     if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "register" &&
+        targetType.toLowerCase() === "link") {
+      await this.registrationPage.clickRegisterLink();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
         target.toLowerCase() === "logout" &&
         targetType.toLowerCase() === "button") {
       await this.registrationPage.logout();
@@ -48,9 +55,23 @@ When(
     }
 
     if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "open new account" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickOpenNewAccountLink();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
         target.toLowerCase() === "transfer" &&
         targetType.toLowerCase() === "button") {
       await this.accountsOverviewPage.clickTransferButton();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "transfer funds" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickTransferFundsLink();
       return;
     }
 
@@ -62,9 +83,44 @@ When(
     }
 
     if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "accounts overview" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickAccountsOverviewLink();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "account number" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickAccountNumberLink();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "transaction" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickTransactionLink();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
         target.toLowerCase() === "savings" &&
         targetType.toLowerCase() === "drop down") {
       await this.accountsOverviewPage.selectAccountType("SAVINGS");
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "bill pay" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickBillPayLink();
+      return;
+    }
+
+    if (action.toLowerCase() === "click" &&
+        target.toLowerCase() === "find transaction" &&
+        targetType.toLowerCase() === "link") {
+      await this.accountsOverviewPage.clickFindTransactionsLink();
       return;
     }
 
@@ -136,6 +192,21 @@ When(
       return;
     }
 
+    if (validationTarget.toLowerCase() === "account numbers do not match error message") {
+      await this.accountsOverviewPage.expectBillPayAccountNumberMismatchError();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "valid amount error message") {
+      await this.accountsOverviewPage.expectBillPayInvalidAmountError();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "bill pay amount error message") {
+      await this.accountsOverviewPage.expectBillPayAmountError();
+      return;
+    }
+
     if (validationTarget.toLowerCase() === "transfer fund error message") {
       await this.accountsOverviewPage.expectTransferFundsErrorMessage();
       return;
@@ -143,6 +214,11 @@ When(
 
     if (validationTarget.toLowerCase() === "transfer complete message") {
       await this.accountsOverviewPage.expectTransferCompleteMessage();
+      return;
+    }
+
+    if (validationTarget.toLowerCase() === "transaction details") {
+      await this.accountsOverviewPage.expectTransactionDetails();
       return;
     }
 
@@ -179,13 +255,13 @@ Then("I validate 20 ledger rows exist with 10 debits and 10 credits", async func
   await this.accountsOverviewPage.expectRapidTransferLedgerRows();
 });
 
-When("I click on the open new account link", async function (this: CustomWorld) {
-  await this.accountsOverviewPage.clickOpenNewAccountLink();
-});
+// When("I click on the open new account link", async function (this: CustomWorld) {
+//   await this.accountsOverviewPage.clickOpenNewAccountLink();
+// });
 
-When("I click on the transfer funds link", async function (this: CustomWorld) {
-  await this.accountsOverviewPage.clickTransferFundsLink();
-});
+// When("I click on the transfer funds link", async function (this: CustomWorld) {
+//   await this.accountsOverviewPage.clickTransferFundsLink();
+// });
 
 When("I transfer the full available balance to the second account", async function (this: CustomWorld) {
   await this.accountsOverviewPage.transferFullAvailableBalanceToSecondAccount();
@@ -203,9 +279,9 @@ When('I perform {int} rapid transfers of {string} to the second account', async 
   await this.accountsOverviewPage.performRapidTransfers(count, amount);
 });
 
-When("I click on the bill pay link", async function (this: CustomWorld) {
-  await this.accountsOverviewPage.clickBillPayLink();
-});
+// When("I click on the bill pay link", async function (this: CustomWorld) {
+//   await this.accountsOverviewPage.clickBillPayLink();
+// });
 
 When('I enter {string} in the {string} textbox', async function (this: CustomWorld, value: string, fieldName: string) {
   await this.accountsOverviewPage.enterText(fieldName, value);
@@ -213,6 +289,22 @@ When('I enter {string} in the {string} textbox', async function (this: CustomWor
 
 When("I fill all bill payment details", async function (this: CustomWorld) {
   await this.accountsOverviewPage.fillBillPayForm();
+});
+
+When("I pay the same bill twice in this session", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.paySameBillTwice();
+});
+
+When('I pay all billers from the {string} CSV file', async function (this: CustomWorld, fileName: string) {
+  await this.accountsOverviewPage.payBillsFromCsv(fileName);
+});
+
+Then("I validate two distinct bill payment debit entries", async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectTwoBillPaymentDebitEntries();
+});
+
+Then('I reconcile the bill payment debits against account activity from the {string} CSV file', async function (this: CustomWorld, fileName: string) {
+  await this.accountsOverviewPage.expectCsvBillPaymentDebits(fileName);
 });
 
 When("I open 5 new accounts sequentially", async function (this: CustomWorld) {

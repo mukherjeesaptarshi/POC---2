@@ -7,7 +7,7 @@ Scenario: Checking account opening success
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I "click" on the "open new account" "button"
     Then I validate the "success message"
     And I validate the "checking account in accounts overview"
@@ -18,7 +18,7 @@ Scenario: Savings account opening success
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I "click" on the "savings" "drop down"
     And I "click" on the "open new account" "button"
     Then I validate the "success message"
@@ -48,6 +48,6 @@ Scenario: Attempt to open an account with insufficient funding balance
     Given I open the web registration page
     And I have registered a new web customer
     When I validate the "registration message"
-    And I click on the open new account link
+    And I "click" on the "open new account" "link"
     And I attempt to open an account with insufficient funding balance
     Then I validate the "insufficient funding error message"
