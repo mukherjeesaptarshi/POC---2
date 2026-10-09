@@ -1,4 +1,4 @@
-@web @bill_pay
+@web @bill_pay_acc_overview
 Feature: Bill Pay Process Verification Through Account Overview
 
 

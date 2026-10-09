@@ -42,7 +42,9 @@ function waitForMockServer(retries = 50): Promise<void> {
 }
 
 if (process.env.API_BASE_URL) {
-  runCucumber(process.env, (code) => process.exit(code));
+  runCucumber(process.env, (code) => {
+    process.exitCode = code;
+  });
 } else {
   const mockServer = spawn(process.execPath, ["src/mock-server/server.js"], {
     stdio: "inherit",
@@ -52,8 +54,18 @@ if (process.env.API_BASE_URL) {
   const finish = (code: number): void => {
     if (finished) return;
     finished = true;
-    if (!mockServer.killed) mockServer.kill();
-    process.exit(code);
+    if (mockServer.exitCode !== null || mockServer.signalCode !== null) {
+      process.exitCode = code;
+      return;
+    }
+
+    const forceStop = setTimeout(() => mockServer.kill("SIGKILL"), 2000);
+    forceStop.unref();
+    mockServer.once("exit", () => {
+      clearTimeout(forceStop);
+      process.exitCode = code;
+    });
+    mockServer.kill();
   };
 
   process.once("SIGINT", () => finish(130));

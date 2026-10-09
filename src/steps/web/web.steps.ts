@@ -118,7 +118,7 @@ When(
     }
 
     if (action.toLowerCase() === "click" &&
-        target.toLowerCase() === "find transaction" &&
+      target.toLowerCase() === "find transactions" &&
         targetType.toLowerCase() === "link") {
       await this.accountsOverviewPage.clickFindTransactionsLink();
       return;
@@ -289,6 +289,75 @@ When('I enter {string} in the {string} textbox', async function (this: CustomWor
 
 When("I fill all bill payment details", async function (this: CustomWorld) {
   await this.accountsOverviewPage.fillBillPayForm();
+});
+
+When("I seed a bill payment for transaction search", async function (this: CustomWorld) {
+  await this.findTransactionsPage.seedBillPayments(1);
+});
+
+When('I search my latest bill payment by {string}', async function (this: CustomWorld, criterion: string) {
+  const criteria = criterion.toLowerCase();
+  if (criteria !== 'id' && criteria !== 'date' && criteria !== 'amount' && criteria !== 'date range') {
+    throw new Error(`Unsupported transaction search criterion: ${criterion}`);
+  }
+  await this.findTransactionsPage.searchLatestTransactionBy(criteria);
+});
+
+When('I search a date range edge case {string}', async function (this: CustomWorld, edgeCase: string) {
+  await this.findTransactionsPage.searchDateRangeEdge(edgeCase);
+});
+
+When('I search for transaction amount {string}', async function (this: CustomWorld, amount: string) {
+  await this.findTransactionsPage.searchAmount(amount);
+});
+
+When('I seed at least {int} transactions and verify search integrity', async function (this: CustomWorld, count: number) {
+  await this.findTransactionsPage.seedAndVerifyHighVolume(count);
+});
+
+Then('transaction search results should be present', async function (this: CustomWorld) {
+  await this.findTransactionsPage.expectSearchResults();
+});
+
+Then('transaction search should show the empty state', async function (this: CustomWorld) {
+  await this.findTransactionsPage.expectEmptySearchResults();
+});
+
+Then('the invalid date range should be rejected or return no results', async function (this: CustomWorld) {
+  await this.findTransactionsPage.expectDateRangeRejected();
+});
+
+When('I open two additional accounts and reconcile all three accounts', async function (this: CustomWorld) {
+  await this.accountsOverviewPage.openMultipleNewAccounts(3);
+});
+
+Then('the three account identities should reconcile', async function (this: CustomWorld) {
+  await this.accountsOverviewPage.expectThreeAccountsReconcile();
+});
+
+When('I apply for a loan of {string} with down payment {string}', async function (this: CustomWorld, amount: string, downPayment: string) {
+  await this.loanPage.apply(amount, downPayment);
+});
+
+Then('the loan status should be {string}', async function (this: CustomWorld, status: string) {
+  if (status !== 'Approved' && status !== 'Denied') throw new Error(`Unsupported loan status: ${status}`);
+  await this.loanPage.expectStatus(status);
+});
+
+Then('the loan should be denied with the funding message', async function (this: CustomWorld) {
+  await this.loanPage.expectDeniedMessage();
+});
+
+Then('the loan boundary request should be rejected', async function (this: CustomWorld) {
+  await this.loanPage.expectBoundaryRejected();
+});
+
+Then('the approved loan account should appear in Accounts Overview', async function (this: CustomWorld) {
+  await this.loanPage.expectApprovedAccountInOverview();
+});
+
+When('I transfer funds out of the approved loan account', async function (this: CustomWorld) {
+  await this.loanPage.transferFromApprovedLoanAccount();
 });
 
 When("I pay the same bill twice in this session", async function (this: CustomWorld) {

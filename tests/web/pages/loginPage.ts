@@ -1,10 +1,13 @@
 import { expect, type Page } from '@playwright/test';
+import { navigateWithRetry } from '../../../utils/pageNavigation';
 
 export class LoginPage {
   constructor(private readonly page: Page) {}
 
   async open(): Promise<void> {
-    await this.page.goto('/parabank/index.htm');
+    await navigateWithRetry(this.page, '/parabank/index.htm');
+    await expect(this.page.locator('input[name="username"]')).toBeVisible({ timeout: 5000 });
+    await expect(this.page.locator('input[name="password"]')).toBeVisible({ timeout: 5000 });
   }
 
   async login(username: string, password: string): Promise<void> {
@@ -14,7 +17,9 @@ export class LoginPage {
   }
 
   async expectInvalidCredentials(): Promise<void> {
-    await expect(this.page.locator('.error')).toContainText(/could not be verified|required/i);
+    await expect(this.page.locator('.error')).toContainText(
+      /could not be verified|invalid username or password|please enter a username and password|username and password.*required/i,
+    );
   }
 
   async expectRejectionMessage(): Promise<void> {
@@ -36,18 +41,10 @@ export class LoginPage {
   }
 
   async expectProtectedPageInaccessibleAfterLogout(): Promise<void> {
-    const protectedUrlPatterns = [/overview\.htm/i, /account.*\.htm/i, /billpay\.htm/i, /transfer\.htm/i];
-    const currentUrl = this.page.url();
-
-    for (const pattern of protectedUrlPatterns) {
-      if (pattern.test(currentUrl)) {
-        throw new Error(`Protected page remained accessible after logout: ${currentUrl}`);
-      }
-    }
-
+    await this.page.reload();
+    await expect(this.page).toHaveURL(/index\.htm|login\.htm/i);
     await expect(this.page.locator('input[name="username"]')).toBeVisible();
     await expect(this.page.locator('input[name="password"]')).toBeVisible();
     await expect(this.page.getByRole('button', { name: /log in/i })).toBeVisible();
-    await expect(this.page).toHaveURL(/index\.htm|login\.htm/i);
   }
 }

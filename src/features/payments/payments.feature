@@ -57,3 +57,24 @@ Feature: Banking payment API
     And I try to move the payment status to "FAILED"
     Then the payment response status is 409
 
+  @A19 @npp @payid
+  Scenario: Real-time PayID payment settles and debits the source account
+    When I submit a real-time PayID payment of 25.50 to "alice.payid@example.com" with mock outcome "SETTLED"
+    Then the payment response status is 201
+    And the real-time payment status is "SETTLED"
+    And the source account balance delta is 25.50
+
+  @A19 @npp @payid
+  Scenario: Real-time PayID payment is rejected without debiting the source account
+    When I submit a real-time PayID payment of 25.50 to "rejected.payid@example.com" with mock outcome "FAILED"
+    Then the payment response status is 200
+    And the real-time payment status is "FAILED"
+    And the source account balance delta is 0
+
+  @A19 @npp @payid
+  Scenario: Real-time PayID timeout leaves the source account unchanged
+    When I submit a real-time PayID payment of 25.50 to "timeout.payid@example.com" with mock outcome "TIMEOUT"
+    Then the payment response status is 504
+    And the real-time payment status is "TIMEOUT"
+    And the source account balance delta is 0
+

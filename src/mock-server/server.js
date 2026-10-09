@@ -1027,6 +1027,95 @@ app.post("/scheduled-payments/:scheduledPaymentId/cancel", authenticate, (req, r
   return res.status(200).json(publicScheduledPayment(scheduledPayment));
 });
 
+app.post("/real-time-payments", authenticate, (req, res) => {
+  const { fromAccountId, payId, amount, currency, reference } = req.body || {};
+  const outcome = req.get("X-Mock-NPP-Outcome") || "SETTLED";
+  const normalizedPayId = typeof payId === "string" ? payId.trim() : "";
+  const numericAmount = Number(amount);
+
+  if (!["SETTLED", "FAILED", "TIMEOUT"].includes(outcome))
+    return error(res, 400, "NPP_MOCK_OUTCOME_INVALID", "Unsupported mock NPP outcome");
+  if (
+    !fromAccountId ||
+    !normalizedPayId ||
+    normalizedPayId.length > 128 ||
+    /\s/.test(normalizedPayId) ||
+    amount === undefined ||
+    !Number.isFinite(numericAmount) ||
+    numericAmount <= 0 ||
+    Math.round(numericAmount * 100) !== numericAmount * 100 ||
+    numericAmount > 10000 ||
+    currency !== "AUD"
+  )
+    return error(
+      res,
+      422,
+      "REAL_TIME_PAYMENT_VALIDATION_FAILED",
+      "A valid source account, PayID, positive AUD amount, and amount within the daily limit are required",
+    );
+
+  const source = ownedAccount(req, fromAccountId);
+  if (!source)
+    return error(res, 422, "REAL_TIME_PAYMENT_VALIDATION_FAILED", "Source account was not found");
+  if (source.balance < numericAmount)
+    return error(res, 422, "REAL_TIME_PAYMENT_VALIDATION_FAILED", "Insufficient funds");
+
+  const paymentId = `NPP-${crypto.randomBytes(5).toString("hex").toUpperCase()}`;
+  const createdAt = new Date().toISOString();
+
+  if (outcome === "TIMEOUT")
+    return error(
+      res,
+      504,
+      "NPP_RESPONSE_TIMEOUT",
+      "No response was received from the NPP participant",
+      { paymentId, status: "TIMEOUT", payId: normalizedPayId },
+    );
+
+  if (outcome === "FAILED")
+    return res.status(200).json({
+      paymentId,
+      status: "FAILED",
+      paymentRail: "NPP",
+      payId: normalizedPayId,
+      amount: numericAmount,
+      currency,
+      fromAccountId,
+      reference: reference || "",
+      failureCode: "PAYID_REJECTED",
+      failureMessage: "The receiving institution rejected the PayID payment",
+      createdAt,
+    });
+
+  source.balance = Number((source.balance - numericAmount).toFixed(2));
+  source.currentBalance = source.balance;
+  source.availableBalance = source.balance;
+  const sourceTransactions = transactions.get(source.accountId) || [];
+  sourceTransactions.push({
+    transactionId: `TX-${crypto.randomBytes(4).toString("hex").toUpperCase()}`,
+    accountId: source.accountId,
+    type: "DEBIT",
+    amount: numericAmount,
+    currency,
+    description: reference || `NPP payment to ${normalizedPayId}`,
+    occurredAt: createdAt,
+  });
+  transactions.set(source.accountId, sourceTransactions);
+
+  return res.status(201).json({
+    paymentId,
+    status: "SETTLED",
+    paymentRail: "NPP",
+    payId: normalizedPayId,
+    amount: numericAmount,
+    currency,
+    fromAccountId,
+    reference: reference || "",
+    createdAt,
+    settledAt: createdAt,
+  });
+});
+
 // Protected payment
 app.post("/payments", authenticate, (req, res) => {
   const {

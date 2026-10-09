@@ -1,4 +1,6 @@
 import { expect, type Page } from '@playwright/test';
+import { randomUUID } from 'node:crypto';
+import { navigateWithRetry } from '../../../utils/pageNavigation';
 
 export type RegistrationCredentials = {
   username: string;
@@ -23,15 +25,35 @@ export class RegistrationPage {
   constructor(private readonly page: Page) {}
 
   async open(): Promise<void> {
-    await this.page.goto('/parabank/index.htm');
+    await navigateWithRetry(this.page, '/parabank/index.htm');
+    await expect(this.page.locator('#loginPanel')).toBeVisible({ timeout: 5000 });
   }
 
   async clickRegisterLink(): Promise<void> {
-    await this.page.locator("//div[@id='loginPanel']/p[2]/a").click();
+    const registerLink = this.page.getByRole('link', { name: /register/i });
+    await expect(this.page.locator('#loginPanel')).toBeVisible();
+    await expect(registerLink).toBeVisible();
+    await registerLink.click();
   }
 
   async enterRequiredDetails(): Promise<RegistrationCredentials> {
-    const username = `webuser${Date.now()}`;
+
+    // const username = `webuser${randomUUID().replaceAll('-', '')}`;
+    const username = `a_${new Date()
+    .toISOString()
+    .replace(/[-:.TZ]/g, '')}`;
+
+    // const now = new Date();
+    // const timestamp =
+    // now.getFullYear().toString() +
+    // String(now.getMonth() + 1).padStart(2, '0') +
+    // String(now.getDate()).padStart(2, '0') +
+    // String(now.getHours()).padStart(2, '0') +
+    // String(now.getMinutes()).padStart(2, '0') +
+    // String(now.getSeconds()).padStart(2, '0') +
+    // String(now.getMilliseconds()).padStart(3, '0');
+    // const username = `webuser_${timestamp}_${randomUUID().slice(0, 8)}`;
+
     const password = 'Password123!';
     await this.page.locator('input[name="customer.firstName"]').fill('Web');
     await this.page.locator('input[name="customer.lastName"]').fill('Smoke');
@@ -60,7 +82,7 @@ export class RegistrationPage {
     await this.page.locator('input[name="customer.address.zipCode"]').fill(data.zipCode ?? '2000');
     await this.page.locator('input[name="customer.phoneNumber"]').fill(data.phoneNumber ?? '0400000000');
     await this.page.locator('input[name="customer.ssn"]').fill(data.ssn ?? '123456789');
-    await this.page.locator('input[name="customer.username"]').fill(data.username ?? `webuser${Date.now()}`);
+    await this.page.locator('input[name="customer.username"]').fill(data.username ?? `webuser${randomUUID().replaceAll('-', '')}`);
     await this.page.locator('input[name="customer.password"]').fill(data.password ?? 'Password123!');
     await this.page.locator('input[name="repeatedPassword"]').fill(data.confirmPassword ?? 'Password123!');
   }
@@ -89,25 +111,12 @@ export class RegistrationPage {
   }
 
   async register(): Promise<RegistrationCredentials> {
-    let lastError: unknown;
-
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (attempt > 0) {
-        await this.page.goto('/parabank/index.htm');
-      }
-
-      try {
-        await this.clickRegisterLink();
-        const credentials = await this.enterRequiredDetails();
-        await this.clickRegisterButton();
-        await this.expectRegistrationMessage();
-        return credentials;
-      } catch (error) {
-        lastError = error;
-      }
-    }
-
-    throw lastError;
+    if (this.page.url() === 'about:blank') await this.open();
+    await this.clickRegisterLink();
+    const credentials = await this.enterRequiredDetails();
+    await this.clickRegisterButton();
+    await this.expectRegistrationMessage();
+    return credentials;
   }
 
   async logout(): Promise<void> {

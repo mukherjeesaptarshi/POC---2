@@ -16,6 +16,8 @@ jobs:
     name: API tests
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    env:
+      REPORT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Checkout
@@ -42,6 +44,14 @@ jobs:
             reports/api-cucumber-report.html
           retention-days: 30
 
+      - name: Upload API report input
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-results-api
+          path: reports/api-cucumber-*.json
+          retention-days: 10
+
   # =========================
   # WEB SMOKE TESTS
   # =========================
@@ -49,6 +59,8 @@ jobs:
     name: Web smoke tests
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    env:
+      REPORT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: Checkout
@@ -87,6 +99,74 @@ jobs:
             reports/web-cucumber-report.html
             reports/web-cucumber-report.json
           retention-days: 30
+
+      - name: Upload web report inputs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: suite-results-web
+          path: |
+            reports/web-cucumber-*.json
+            reports/playwright-*.json
+          retention-days: 10
+
+  consolidated-report:
+    name: Consolidated ten-day report
+    if: ${{ always() }}
+    needs:
+      - api
+      - web-smoke
+    runs-on: ubuntu-latest
+    env:
+      REPORT_RUN_ID: ${{ github.run_id }}-${{ github.run_attempt }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download suite reports
+        if: ${{ !cancelled() }}
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          pattern: suite-results-*
+          path: reports/incoming
+          merge-multiple: true
+
+      - name: Restore ten-day report history
+        uses: actions/cache/restore@v4
+        with:
+          path: reports/consolidated-history.json
+          key: suite-history-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: suite-history-${{ github.ref_name }}-
+
+      - name: Build consolidated HTML report
+        run: npm run report:consolidate
+
+      - name: Save ten-day report history
+        uses: actions/cache/save@v4
+        with:
+          path: reports/consolidated-history.json
+          key: suite-history-${{ github.ref_name }}-${{ github.run_id }}-${{ github.run_attempt }}
+
+      - name: Upload consolidated report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: consolidated-ten-day-report
+          path: |
+            reports/consolidated-report.html
+            reports/consolidated-history.json
+          retention-days: 10
 
   # =========================
   # SECRET SCAN

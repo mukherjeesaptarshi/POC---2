@@ -75,9 +75,7 @@ export class AccountsOverviewPage {
   }
 
   async clickFindTransactionsLink(): Promise<void> {
-    // await this.page.getByRole('link', { name: 'Find Transactions' }).click();
-    await this.page.pause();
-    await this.page.locator("//a[text()='Find Transactions']").click();
+    await this.page.getByRole('link', { name: /find transactions/i }).click();
   }
 
   async clickBillPayLink(): Promise<void> {
@@ -545,12 +543,32 @@ export class AccountsOverviewPage {
 
   async openMultipleNewAccounts(count: number): Promise<void> {
     for (let i = 0; i < count; i++) {
+      // console.log('Value of count' +count);
+      // await this.page.pause();
       await this.clickOpenNewAccountLink();
       await this.clickOpenNewAccountButton();
       await expect(this.page.locator('#openAccountResult')).toContainText(/Account Opened!/i, { timeout: 15000 });
       if (i < count - 1) {
         await this.clickOpenNewAccountLink();
       }
+    }
+  }
+
+  async expectThreeAccountsReconcile(): Promise<void> {
+    await this.clickAccountsOverviewLink();
+    const accountLinks = this.page.locator('#accountTable tbody tr a');
+    await expect(accountLinks).toHaveCount(3, { timeout: 15000 });
+    const accountHrefs = await accountLinks.evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).getAttribute('href') ?? ''));
+    const accountIds = accountHrefs.map((href) => new URL(href, this.page.url()).searchParams.get('id'));
+    expect(accountIds.every(Boolean)).toBeTruthy();
+    expect(new Set(accountIds).size).toBe(3);
+
+    for (let index = 0; index < accountIds.length; index++) {
+      const expectedId = accountIds[index];
+      await this.page.locator('#accountTable tbody tr a').nth(index).click();
+      await expect(this.page.locator('#accountTable')).toHaveCount(0);
+      expect(new URL(this.page.url()).searchParams.get('id')).toBe(expectedId);
+      await this.clickAccountsOverviewLink();
     }
   }
 

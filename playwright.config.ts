@@ -7,6 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 // import path from 'path';
 dotenv.config();
+const reportRunId = (process.env.REPORT_RUN_ID || `${Date.now()}-${process.pid}`)
+  .replace(/[^a-zA-Z0-9_-]/g, '-');
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -19,14 +21,25 @@ export default defineConfig({
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
+  /* Retried tests still fail CI so flaky behavior remains visible. */
+  failOnFlakyTests: !!process.env.CI,
   /* Retry on CI only */
   retries: process.env.CI ? 2 : 0,
-  /* Opt out of parallel tests on CI. */
-  workers: process.env.CI ? 1 : undefined,
+  /* The public demo has shared state and rate limits; serialize its UI tests. */
+  workers: 1,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: process.env.CI
-    ? [['blob'], ['html', { open: 'never' }]]
-    : [['html', { open: 'never' }]],
+    ? [
+        ['json', { outputFile: `reports/playwright-${reportRunId}.json` }],
+        ['blob'],
+        ['html', { open: 'never' }],
+        ['allure-playwright'],
+      ]
+    : [
+        ['json', { outputFile: `reports/playwright-${reportRunId}.json` }],
+        ['html', { open: 'never' }],
+        ['allure-playwright'],
+      ],
   snapshotPathTemplate: '{testDir}/__snapshots__/{projectName}/{testFilePath}/{arg}{ext}',
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
@@ -42,11 +55,20 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    {
-      name: 'chromium',
-      use: { ...devices['Desktop Chrome'] },
+  {
+    name: 'chromium',
+    use: {
+      ...devices['Desktop Chrome'],
     },
-  ],
+  },
+
+  {
+    name: 'firefox',
+    use: {
+      ...devices['Desktop Firefox'],
+    },
+  },
+],
 
   /* Run your local dev server before starting the tests */
   // webServer: {

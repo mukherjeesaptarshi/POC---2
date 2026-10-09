@@ -1,6 +1,11 @@
 import { When, Then } from "@cucumber/cucumber";
 import { expect } from "@playwright/test";
-import { errorSchema, paymentSchema } from "../../models/payment.model";
+import {
+  errorSchema,
+  paymentSchema,
+  realTimePaymentSchema,
+  realTimePaymentTimeoutSchema,
+} from "../../models/payment.model";
 import { CustomWorld } from "../../support/world";
 import { parseIsoDate } from "../../../utils/dateUtils";
 import { isoDateSchema, parseSchema } from "../../support/schema";
@@ -53,6 +58,62 @@ When(
     this.repeatedPayment = await this.response.json();
   },
 );
+
+When(
+  "I submit a real-time PayID payment of {float} to {string} with mock outcome {string}",
+  async function (
+    this: CustomWorld,
+    amount: number,
+    payId: string,
+    outcome: string,
+  ) {
+    expect(["SETTLED", "FAILED", "TIMEOUT"]).toContain(outcome);
+    const source = await this.accountService.getAccount(
+      "ACC-001",
+      this.accessToken,
+    );
+    this.sourceBalanceBefore = (await source.json()).balance;
+    this.response = await this.paymentService.createRealTimePayment(
+      this.accessToken,
+      {
+        fromAccountId: "ACC-001",
+        payId,
+        amount,
+        currency: "AUD",
+        reference: "NPP PayID test payment",
+      },
+      outcome as "SETTLED" | "FAILED" | "TIMEOUT",
+    );
+    this.apiResponseBody = await this.response.json();
+  },
+);
+
+Then(
+  "the real-time payment status is {string}",
+  function (this: CustomWorld, status: string) {
+    if (status === "TIMEOUT") {
+      parseSchema(
+        realTimePaymentTimeoutSchema,
+        this.apiResponseBody,
+        "NPP payment timeout",
+      );
+    } else {
+      parseSchema(realTimePaymentSchema, this.apiResponseBody, "NPP payment");
+    }
+    expect(this.apiResponseBody.status).toBe(status);
+  },
+);
+
+Then(
+  "the source account balance delta is {float}",
+  async function (this: CustomWorld, expectedDelta: number) {
+    const source = await (
+      await this.accountService.getAccount("ACC-001", this.accessToken)
+    ).json();
+    expect(this.sourceBalanceBefore - source.balance).toBe(expectedDelta);
+  },
+);
+
 Then(
   "the repeated payment has the original payment ID",
   function (this: CustomWorld) {

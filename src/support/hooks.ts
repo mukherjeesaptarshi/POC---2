@@ -11,9 +11,9 @@ Before({ tags: "@web" }, async function (this: CustomWorld) {
 });
 
 After(async function (this: CustomWorld) {
-  await this.dispose();
-});
-
-After({ tags: "@web" }, async function (this: CustomWorld) {
-  await this.disposeWeb();
+  try {
+    await this.dispose();
+  } finally {
+    await this.disposeWeb();
+  }
 });

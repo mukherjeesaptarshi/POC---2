@@ -22,6 +22,19 @@ export default class BankingPaymentService {
     });
   }
 
+  createRealTimePayment(
+    accessToken: string,
+    payload: unknown,
+    mockOutcome: "SETTLED" | "FAILED" | "TIMEOUT",
+  ): Promise<APIResponse> {
+    return this.apiClient.post("/real-time-payments", payload, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "X-Mock-NPP-Outcome": mockOutcome,
+      },
+    });
+  }
+
   getStatus(accessToken: string, paymentId: string): Promise<APIResponse> {
     return this.apiClient.get(`/payments/${paymentId}`, {
       headers: { Authorization: `Bearer ${accessToken}` },

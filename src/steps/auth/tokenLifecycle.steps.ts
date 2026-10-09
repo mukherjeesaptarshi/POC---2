@@ -13,15 +13,19 @@ Given(
       Buffer.from(parts[1], "base64url").toString("utf-8"),
     );
 
-    const expiryTime = payload.exp * 1000;
-
-    const remainingTime = expiryTime - Date.now();
-
-    if (remainingTime > 0) {
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, remainingTime + 1000),
-      );
-    }
+    const timeout = Math.max(0, payload.exp * 1000 - Date.now()) + 5000;
+    await expect
+      .poll(
+        async () =>
+          (
+            await this.accountService.getAccount(
+              "ACC-001",
+              this.accessToken,
+            )
+          ).status(),
+        { timeout, intervals: [100, 250, 500, 1000] },
+      )
+      .toBe(401);
   },
 );
 

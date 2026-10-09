@@ -6,28 +6,78 @@
 
   "scripts": {
     "test": "tsx scripts/runApiTests.ts",
+    "pretest": "npm run allure:clean",
 
     "test:web": "playwright test",
+    "pretest:web": "npm run allure:clean",
     "test:web:smoke": "playwright test tests/web/smoke.spec.ts --project=chromium",
+    "pretest:web:smoke": "npm run allure:clean",
     "test:web:headed": "playwright test tests/web/smoke.spec.ts --project=chromium --headed",
+    "pretest:web:headed": "npm run allure:clean",
     "test:web:bdd": "cucumber-js --profile web",
+    "pretest:web:bdd": "npm run allure:clean",
 
     "test:api": "cucumber-js",
+    "pretest:api": "npm run allure:clean",
     "test:api:shard": "node scripts/runApiShard.ts",
     "test:api:lifecycle": "cross-env ACCESS_TOKEN_SECONDS=2 cucumber-js --profile api --tags @A3",
+    "pretest:api:lifecycle": "npm run allure:clean",
+    "report:consolidate": "tsx scripts/consolidateReports.ts",
 
     "start:locale:server": "node src/mock-server/server.js",
 
     "bdd": "cucumber-js",
+    "prebdd": "npm run allure:clean",
 
     "bdd:web": "cucumber-js --profile web",
-    "bdd:web:headed": "cross-env HEADLESS=false cucumber-js --profile web",
+    "prebdd:web": "npm run allure:clean",
+    "bdd:web:headed": "cross-env WEB_BROWSER=chromium HEADLESS=false cucumber-js --profile web --tags @web",
+    "prebdd:web:headed": "npm run allure:clean",
+    "bdd:web:chrome": "cross-env WEB_BROWSER=chrome cucumber-js --profile web",
+    "prebdd:web:chrome": "npm run allure:clean",
+    "bdd:web:firefox": "cross-env WEB_BROWSER=firefox cucumber-js --profile web",
+    "prebdd:web:firefox": "npm run allure:clean",
+    "bdd:web:edge": "cross-env WEB_BROWSER=edge cucumber-js --profile web",
+    "prebdd:web:edge": "npm run allure:clean",
+    "bdd:web:all": "tsx scripts/runWebBrowsers.ts",
+    "prebdd:web:all": "npm run allure:clean",
+    "bdd:web:accessibility": "cucumber-js --profile web --tags @accessibility",
+    "prebdd:web:accessibility": "npm run allure:clean",
 
     "bdd:login": "cucumber-js --profile web --tags @login",
+    "prebdd:login": "npm run allure:clean",
     "bdd:login:headed": "cross-env HEADLESS=false cucumber-js --profile web --tags @login",
+    "prebdd:login:headed": "npm run allure:clean",
 
     "bdd:registration": "cucumber-js --profile web --tags @registration",
-    "bdd:registration:headed": "cross-env HEADLESS=false cucumber-js --profile web --tags @registration"
+    "prebdd:registration": "npm run allure:clean",
+    "bdd:registration:headed": "cross-env HEADLESS=false cucumber-js --profile web --tags @registration",
+    "prebdd:registration:headed": "npm run allure:clean",
+
+    "bdd:web:chrome:headed": "cross-env WEB_BROWSER=chrome HEADLESS=false cucumber-js --profile web",
+    "prebdd:web:chrome:headed": "npm run allure:clean",
+    "bdd:web:firefox:headed": "cross-env WEB_BROWSER=firefox HEADLESS=false cucumber-js --profile web",
+    "prebdd:web:firefox:headed": "npm run allure:clean",
+    "bdd:web:edge:headed": "cross-env WEB_BROWSER=edge HEADLESS=false cucumber-js --profile web",
+    "prebdd:web:edge:headed": "npm run allure:clean",
+
+    "bdd:web:all:headed": "cross-env HEADLESS=false tsx scripts/runWebBrowsers.ts",
+    "prebdd:web:all:headed": "npm run allure:clean",
+
+    "bdd:web:mobile": "cross-env MOBILE=true cucumber-js --profile web",
+    "prebdd:web:mobile": "npm run allure:clean",
+"bdd:web:mobile:headed": "cross-env MOBILE=true HEADLESS=false cucumber-js --profile web",
+  "prebdd:web:mobile:headed": "npm run allure:clean",
+
+"bdd:web:all:mobile": "cross-env MOBILE=true tsx scripts/runWebBrowsers.ts",
+  "prebdd:web:all:mobile": "npm run allure:clean",
+"bdd:web:all:mobile:headed": "cross-env MOBILE=true HEADLESS=false tsx scripts/runWebBrowsers.ts",
+  "prebdd:web:all:mobile:headed": "npm run allure:clean",
+
+    "report:allure:generate": "allure generate ./allure-results -o ./reports/allure-report --clean",
+    "report:allure:open": "allure open ./reports/allure-report",
+    "report:allure:serve": "npm run report:allure:generate && npm run report:allure:open",
+    "allure:clean": "tsx scripts/cleanAllureResults.ts"
   },
 
   "repository": {
@@ -52,7 +102,10 @@
     "@types/pngjs": "^6.0.5",
     "cross-env": "^10.1.0",
     "tsx": "^4.23.12",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    
+    "allure-commandline": "^2.46.1",
+    "allure-cucumberjs": "^3.13.0"
   },
 
   "dependencies": {

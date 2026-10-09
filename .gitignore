@@ -13,6 +13,14 @@ node_modules/
 /reports/api-*.log
 /reports/api-cucumber-report-*.json
 /reports/api-cucumber-report-*.html
+/reports/api-cucumber-*.json
+/reports/web-cucumber-*.json
+/reports/playwright-*.json
+/reports/consolidated-report.html
+/reports/consolidated-history.json
+/reports/accessibility/
 /reports/web-cucumber-report.html
 /reports/web-cucumber-report.json
+/reports/web-cucumber-report-*.html
+/reports/web-cucumber-report-*.json
 /tests/reports/

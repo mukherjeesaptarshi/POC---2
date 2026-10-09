@@ -13,6 +13,48 @@ export const paymentSchema = z
   })
   .strict();
 
+export const realTimePaymentSchema = z.discriminatedUnion("status", [
+  z
+    .object({
+      paymentId: z.string(),
+      status: z.literal("SETTLED"),
+      paymentRail: z.literal("NPP"),
+      payId: z.string(),
+      amount: z.number(),
+      currency: z.literal("AUD"),
+      fromAccountId: z.string(),
+      reference: z.string(),
+      createdAt: isoDateSchema,
+      settledAt: isoDateSchema,
+    })
+    .strict(),
+  z
+    .object({
+      paymentId: z.string(),
+      status: z.literal("FAILED"),
+      paymentRail: z.literal("NPP"),
+      payId: z.string(),
+      amount: z.number(),
+      currency: z.literal("AUD"),
+      fromAccountId: z.string(),
+      reference: z.string(),
+      failureCode: z.literal("PAYID_REJECTED"),
+      failureMessage: z.string(),
+      createdAt: isoDateSchema,
+    })
+    .strict(),
+]);
+
+export const realTimePaymentTimeoutSchema = z
+  .object({
+    code: z.literal("NPP_RESPONSE_TIMEOUT"),
+    message: z.string(),
+    paymentId: z.string(),
+    status: z.literal("TIMEOUT"),
+    payId: z.string(),
+  })
+  .strict();
+
 export const errorSchema = z
   .object({
     code: z.string(),

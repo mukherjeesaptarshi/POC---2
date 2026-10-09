@@ -21,7 +21,9 @@ import {
 import { DriverFactory } from "../web/driverFactory";
 import { WebDataFactory } from "../web/webDataFactory";
 import { AccountsOverviewPage } from "../../tests/web/pages/accountsOverviewPage";
+import { FindTransactionsPage } from "../../tests/web/pages/findTransactionsPage";
 import { LoginPage } from "../../tests/web/pages/loginPage";
+import { LoanPage } from "../../tests/web/pages/loanPage";
 import {
   RegistrationCredentials,
   RegistrationPage,
@@ -105,6 +107,8 @@ export class CustomWorld extends World {
   loginPage!: LoginPage;
   registrationPage!: RegistrationPage;
   accountsOverviewPage!: AccountsOverviewPage;
+  findTransactionsPage!: FindTransactionsPage;
+  loanPage!: LoanPage;
   webCredentials!: RegistrationCredentials;
   webDataFactory!: WebDataFactory;
 
@@ -138,21 +142,48 @@ export class CustomWorld extends World {
 
   async initializeWeb(): Promise<void> {
     this.webBrowser = await DriverFactory.createBrowser();
-    this.webContext = await this.webBrowser.newContext({
-      baseURL: getWebBaseUrl(),
-      ignoreHTTPSErrors: shouldIgnoreWebHttpsErrors(),
-    });
+    // this.webContext = await this.webBrowser.newContext({
+    //   baseURL: getWebBaseUrl(),
+    //   ignoreHTTPSErrors: shouldIgnoreWebHttpsErrors(),
+    // });
+
+    const isMobile = process.env.MOBILE === "true";
+
+this.webContext = await this.webBrowser.newContext({
+  baseURL: getWebBaseUrl(),
+  ignoreHTTPSErrors: shouldIgnoreWebHttpsErrors(),
+
+  ...(isMobile
+    ? {
+        viewport: {
+          width: 390,
+          height: 844,
+        },
+        isMobile: true,
+        hasTouch: true,
+      }
+    : {}),
+});
+
     this.webPage = await this.webContext.newPage();
     this.loginPage = new LoginPage(this.webPage);
     this.registrationPage = new RegistrationPage(this.webPage);
     this.accountsOverviewPage = new AccountsOverviewPage(this.webPage);
+    this.findTransactionsPage = new FindTransactionsPage(this.webPage, this.accountsOverviewPage);
+    this.loanPage = new LoanPage(this.webPage);
     this.webDataFactory = new WebDataFactory();
   }
 
   async disposeWeb(): Promise<void> {
-    await this.webDataFactory?.dispose();
-    await this.webContext?.close();
-    await this.webBrowser?.close();
+    try {
+      await this.webDataFactory?.dispose();
+    } finally {
+      try {
+        await this.webContext?.close();
+      } finally {
+        await this.webBrowser?.close();
+      }
+    }
   }
 }
 
