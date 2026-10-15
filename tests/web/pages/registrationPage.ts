@@ -116,6 +116,7 @@ export class RegistrationPage {
     const credentials = await this.enterRequiredDetails();
     await this.clickRegisterButton();
     await this.expectRegistrationMessage();
+    await this.page.pause();
     return credentials;
   }
 

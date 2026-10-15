@@ -23,7 +23,7 @@ Scenario: Transfer funds in same account
     Then I validate the "transfer complete message"
 
 
-@transfer_funds_different_acc
+@TC-95 @transfer_funds_different_acc
 Scenario: Transfer funds in different accounts
     Given I open the web registration page
     And I have registered a new web customer
@@ -38,6 +38,7 @@ Scenario: Transfer funds in different accounts
     And I "click" on the "transfer" "button"
     And I validate the "transfer complete message"
     Then I validate the debit and credit in both accounts
+    And the transfer should be visible in both account activities
 
 
 @transfer_full_available_balance

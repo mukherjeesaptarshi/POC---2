@@ -70,6 +70,64 @@ export class AccountsOverviewPage {
     await expect(this.page.locator('#transactionTable')).toBeVisible({ timeout: 15000 });
   }
 
+  async expectDefaultAccountDetailsDisplayed(): Promise<void> {
+    await this.openAccountsOverview();
+    const row = this.page.locator('#accountTable tbody tr').first();
+    const accountNumber = (await row.locator('td').first().innerText()).trim();
+    const accountId = new URL(await row.getByRole('link').getAttribute('href') ?? '', this.page.url()).searchParams.get('id');
+    expect(accountNumber).not.toBe('');
+    expect(accountId).toBeTruthy();
+
+    await row.getByRole('link').click();
+    await expect(this.page.locator('#transactionTable')).toBeVisible({ timeout: 15000 });
+    await expect(this.page).toHaveURL(new RegExp(`[?&]id=${accountId}(?:&|$)`));
+    await expect(this.page.locator('body')).toContainText(accountNumber);
+  }
+
+  async expectOpeningBalanceReconciles(): Promise<void> {
+    await this.openAccountsOverview();
+    const row = this.page.locator('#accountTable tbody tr').first();
+    const openingBalanceCents = this.parseCurrencyValue(await row.locator('td').nth(1).innerText());
+    await row.getByRole('link').click();
+    const activityRows = this.page.locator('#transactionTable tbody tr');
+    await expect(activityRows.first()).toBeVisible({ timeout: 15000 });
+
+    const movements = await activityRows.evaluateAll((rows) => rows.map((activityRow) => {
+      const cells = [...activityRow.querySelectorAll('td')].map((cell) => cell.textContent?.trim() ?? '');
+      return { debit: cells[2] ?? '', credit: cells[3] ?? '' };
+    }));
+    const creditsCents = movements.reduce((total, movement) => total + this.parseCurrencyValue(movement.credit), 0);
+    const debitsCents = movements.reduce((total, movement) => total + this.parseCurrencyValue(movement.debit), 0);
+
+    expect(creditsCents).toBeGreaterThan(0);
+    expect(creditsCents - debitsCents).toBe(openingBalanceCents);
+  }
+
+  async expectTransferEntriesInBothActivities(): Promise<void> {
+    if (!this.transferBaseline || this.transferBaseline.amountCents <= 0) {
+      throw new Error('Transfer baseline was not captured before validating activity entries.');
+    }
+
+    const expectedAmountCents = this.transferBaseline.amountCents;
+    await this.openAccountsOverview();
+    const accountRows = this.page.locator('#accountTable tbody tr');
+    await expect(accountRows).toHaveCount(2, { timeout: 15000 });
+
+    for (const [index, movementType] of [[0, 'debit'], [1, 'credit']] as const) {
+      await this.page.locator('#accountTable tbody tr a').nth(index).click();
+      const activityRows = this.page.locator('#transactionTable tbody tr');
+      await expect(activityRows).not.toHaveCount(0, { timeout: 15000 });
+      const values = await activityRows.evaluateAll((rows) => rows.map((activityRow) => {
+        const cells = [...activityRow.querySelectorAll('td')].map((cell) => cell.textContent?.trim() ?? '');
+        return { debit: cells[2] ?? '', credit: cells[3] ?? '' };
+      }));
+      const amountColumn = movementType === 'debit' ? 'debit' : 'credit';
+      expect(values.some((value) => this.parseCurrencyValue(value[amountColumn]) === expectedAmountCents)).toBeTruthy();
+
+      if (index === 0) await this.clickAccountsOverviewLink();
+    }
+  }
+
   async clickTransactionLink(): Promise<void> {
     await this.page.getByRole('link', { name: /transaction/i }).first().click();
   }
@@ -190,6 +248,14 @@ export class AccountsOverviewPage {
     await expect(this.page.locator('body')).toContainText(/transaction details|transaction id|amount|description/i);
   }
 
+  async expectBillPaymentInActivity(): Promise<void> {
+    const paymentRows = this.page.locator('#transactionTable tbody tr').filter({
+      hasText: /ACME Utilities|25\.00/i,
+    });
+    await expect(paymentRows).toHaveCount(1, { timeout: 15000 });
+    await expect(paymentRows.first()).toContainText(/ACME Utilities|25\.00/i);
+  }
+
   async expectTwoBillPaymentDebitEntries(): Promise<void> {
     await this.clickAccountsOverviewLink();
     await this.clickAccountNumberLink();
@@ -307,6 +373,60 @@ export class AccountsOverviewPage {
     await this.page.locator('#amount').fill(amount);
     await this.selectDropdownOption('to account', 'first option');
     await this.clickTransferButton();
+  }
+
+  async doubleSubmitTransfer(amount: string): Promise<void> {
+    if (!this.transferBaseline) throw new Error('Transfer baseline was not captured before submitting.');
+    this.transferBaseline.amountCents = this.parseCurrencyValue(amount);
+    await this.page.locator('#amount').fill(amount);
+    await this.selectDropdownOption('to account', 'second option');
+    await this.page.locator('input[type="submit"]').dblclick({ delay: 20 });
+  }
+
+  async submitTransferAndRefresh(amount: string): Promise<void> {
+    if (!this.transferBaseline) throw new Error('Transfer baseline was not captured before submitting.');
+    this.transferBaseline.amountCents = this.parseCurrencyValue(amount);
+    await this.page.locator('#amount').fill(amount);
+    await this.selectDropdownOption('to account', 'second option');
+    const requestStarted = this.page.waitForRequest(
+      (request) => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/transfer.htm'),
+    );
+    await this.page.locator('input[type="submit"]').evaluate((button) => {
+      (button as HTMLInputElement).form?.requestSubmit(button as HTMLInputElement);
+    });
+    await requestStarted;
+    await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  }
+
+  async submitBillPaymentAndRefresh(): Promise<void> {
+    await this.fillBillPayForm();
+    const requestStarted = this.page.waitForRequest(
+      (request) => request.method() === 'POST' && new URL(request.url()).pathname.endsWith('/billpay.htm'),
+    );
+    await this.page.locator('input[value="Send Payment"]').evaluate((button) => {
+      (button as HTMLInputElement).form?.requestSubmit(button as HTMLInputElement);
+    });
+    await requestStarted;
+    await this.page.reload({ waitUntil: 'domcontentloaded' }).catch(() => undefined);
+  }
+
+  async expectTransferAppliedAtMostOnce(): Promise<void> {
+    if (!this.transferBaseline) throw new Error('Transfer baseline was not captured before validating.');
+    await this.openAccountsOverview();
+    const rows = this.page.locator('#accountTable tbody tr');
+    const currentBalance = this.parseCurrencyValue(await rows.nth(0).locator('td').nth(1).innerText());
+    const debitCents = this.transferBaseline.sourceBalanceCents - currentBalance;
+    expect([0, this.transferBaseline.amountCents]).toContain(debitCents);
+  }
+
+  async expectBillPaymentAppliedAtMostOnce(): Promise<void> {
+    await this.page.goto(new URL('overview.htm', this.page.url()).toString());
+    await expect(this.page.locator('#accountTable tbody tr').first()).toBeVisible({ timeout: 15000 });
+    await this.clickAccountNumberLink();
+    const matchingRows = this.page.locator('#transactionTable tbody tr').filter({
+      hasText: /ACME Utilities|25\.00/i,
+    });
+    expect(await matchingRows.count()).toBeLessThanOrEqual(1);
   }
 
   async performRapidTransfers(count: number, amount: string): Promise<void> {
@@ -558,6 +678,9 @@ export class AccountsOverviewPage {
     await this.clickAccountsOverviewLink();
     const accountLinks = this.page.locator('#accountTable tbody tr a');
     await expect(accountLinks).toHaveCount(3, { timeout: 15000 });
+    const accountNumbers = (await accountLinks.allTextContents()).map((value) => value.trim());
+    expect(accountNumbers.every(Boolean)).toBeTruthy();
+    expect(new Set(accountNumbers).size).toBe(3);
     const accountHrefs = await accountLinks.evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).getAttribute('href') ?? ''));
     const accountIds = accountHrefs.map((href) => new URL(href, this.page.url()).searchParams.get('id'));
     expect(accountIds.every(Boolean)).toBeTruthy();

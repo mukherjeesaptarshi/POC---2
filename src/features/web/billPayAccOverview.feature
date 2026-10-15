@@ -2,7 +2,7 @@
 Feature: Bill Pay Process Verification Through Account Overview
 
 
-@bill_pay_success
+@TC-96 @bill_pay_success
 Scenario: Send Payment with all values
     Given I open the web registration page
     And I have registered a new web customer
@@ -13,5 +13,6 @@ Scenario: Send Payment with all values
     And I validate the "bill pay success message"
     And I "click" on the "accounts overview" "link"
     And I "click" on the "account number" "link"
+    And the bill payment should be visible in account activity
     And I "click" on the "transaction" "link"
     Then I validate the "transaction details"

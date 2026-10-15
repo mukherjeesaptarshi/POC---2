@@ -93,7 +93,7 @@ Scenario: Amount search with no matching result shows empty state
     Then transaction search should show the empty state
 
 
-@find_transactions_volume
+@TC-93 @find_transactions_volume
 Scenario: Search integrity and newest-first ordering with more than 50 transactions
     Given I open the web registration page
     And I have registered a new web customer
@@ -102,7 +102,7 @@ Scenario: Search integrity and newest-first ordering with more than 50 transacti
     Then transaction search results should be present
 
 
-@find_transactions_three_accounts
+@TC-113 @find_transactions_three_accounts
 Scenario: Reconcile the UI account identity for three accounts
     Given I open the web registration page
     And I have registered a new web customer

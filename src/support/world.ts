@@ -36,6 +36,7 @@ import DataFactoryService from "@src/services/dataFactoryService";
 import ScheduledPaymentService from "@src/services/scheduledPaymentService";
 import StatementService from "@src/services/statementService";
 import CustomerService from "@src/services/customerService";
+import { CustomerPortalPage } from "../../tests/web/pages/customerPortalPage";
 
 export class CustomWorld extends World {
   request!: APIRequestContext;
@@ -111,6 +112,7 @@ export class CustomWorld extends World {
   loanPage!: LoanPage;
   webCredentials!: RegistrationCredentials;
   webDataFactory!: WebDataFactory;
+  customerPortalPage!: CustomerPortalPage;
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -172,6 +174,7 @@ this.webContext = await this.webBrowser.newContext({
     this.findTransactionsPage = new FindTransactionsPage(this.webPage, this.accountsOverviewPage);
     this.loanPage = new LoanPage(this.webPage);
     this.webDataFactory = new WebDataFactory();
+    this.customerPortalPage = new CustomerPortalPage(this.webPage);
   }
 
   async disposeWeb(): Promise<void> {
